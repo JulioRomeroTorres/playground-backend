@@ -5,7 +5,7 @@ from PIL import Image
 import io
 from typing import Any, Dict, List, Optional, Union, Tuple
 from uuid import uuid4, UUID
-from datetime import datetime
+from datetime import datetime, timezone
 from urllib.parse import urlparse
 from app.domain.contants import MEDIA_FILE_MAPPER
 from concurrent.futures import ProcessPoolExecutor, as_completed
@@ -39,6 +39,9 @@ def get_or_create_uuid(session_id: Optional[Union[UUID, str]] =  None) -> UUID:
     
 def get_current_datetime() -> str:
     return datetime.now().isoformat()
+
+def get_datetime_now() -> datetime:
+    return datetime.now(timezone.utc)
 
 def secuential_pdf_to_img(img_folder: str, source_pdf: str, dpi: Optional[int] = 150, format: Optional[str] = 'jpg'):
 

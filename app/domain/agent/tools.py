@@ -2,6 +2,7 @@
 from typing import Dict, Optional
 from pydantic import BaseModel, Field
 from typing import List, Any
+from datetime import datetime
 
 class InputParameter(BaseModel):
     name: str = Field(default="")
@@ -23,3 +24,31 @@ class ToolSettings(BaseModel):
     target_scope: Optional[List[str]] = Field(default=[])
     user_token: Optional[str] = Field(default=None)
     logical_content: Optional[str] = Field(default=None)
+
+
+class SimplifyToolInformation(BaseModel):
+    name: str 
+    tool_id: str
+    description: Optional[str] = ""
+    created_at: datetime
+    updated_at: Optional[datetime] = None
+
+    def format_json(self):
+        return {
+            "name": self.name,
+            "description": self.description,
+            "create_at": self.created_at.strftime("%d/%m/%Y %H:%M"),
+            "updated_at": None if self.updated_at is None else self.updated_at.strftime("%d/%m/%Y %H:%M"),
+            "tool_id": self.tool_id
+        }
+
+class CompletedToolInformation(SimplifyToolInformation):
+    code: Optional[str] = ""
+    input_params: Optional[Dict[str, Any]] = None 
+
+    def format_json(self):
+        return {
+            **super().format_json(),
+            "code": self.code,
+            "input_params": self.input_params,
+        }

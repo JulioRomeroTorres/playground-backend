@@ -135,7 +135,7 @@ class DependencyContainer:
     
     def get_handle_agents_use_case(self) -> HandleAgentsUseCase:
         return HandleAgentsUseCase(
-            agent_manager=self.get("agent_information_manager")
+            agent_information_manager=self.get("agent_information_manager")
         )
     
     def get_handle_tools_use_case(self) -> HandleToolsUseCase:

@@ -1,7 +1,12 @@
 from datetime import datetime
-from typing import Any, List
+from typing import Any, List, Optional
+
 from agent_framework import ChatMessage, UsageDetails
 from pydantic import BaseModel, Field
+from app.domain.agent.tools import (
+    SimplifyToolInformation,
+    CompletedToolInformation
+) 
 
 class AgentResponse(BaseModel):
     message: str = Field(description="Response message text")
@@ -32,9 +37,39 @@ class ConversationResponse(BaseModel):
     conversation_id: str = Field(description="Conversation Id")
     created_at: str = Field(description="created_at")
 
+
+class SimplifyAgentInformation(BaseModel):
+    name: str
+    agent_id: Optional[str] = ""
+    version: str
+    created_at: Optional[datetime] = None
+    updated_at: Optional[datetime] = None
+
+    def format_json(self):
+        return {
+            "name": self.name,
+            "version": self.version,
+            "create_at": None if self.created_at is None else self.created_at.strftime("%d/%m/%Y %H:%M"),
+            "updated_at": None if self.updated_at is None else self.updated_at.strftime("%d/%m/%Y %H:%M"),
+            "agent_id": self.agent_id
+        }
+
+class CompletedAgentInformation(SimplifyAgentInformation):
+    tools: Optional[List[SimplifyToolInformation]] = []
+    prompt: Optional[str] = ""
+    enable_memory: Optional[bool] = False
+    
+    def format_json(self):
+        return {
+            **super().format_json(),
+            "prompt": self.prompt,
+            "enable_memory": self.enable_memory,
+            "tools": [ tool.format_json() for tool in self.tools ]
+        }
+
 class AgentSettings(BaseModel):
     name: str
     version: str
     system_instruction: str
     model: str
-    tools_information: List[Any]
+    tools_information: List[CompletedToolInformation]

@@ -1,5 +1,10 @@
 from typing import List, Any
 from app.application.services.agent_information_manager import AgentInformationManager
+from app.domain.utils import generate_uuid, get_datetime_now
+from app.domain.agent.agent import (
+    SimplifyAgentInformation,
+    CompletedAgentInformation
+) 
 
 class HandleAgentsUseCase:
     
@@ -7,14 +12,31 @@ class HandleAgentsUseCase:
         self.agent_information_manager = agent_information_manager
         pass
 
-    async def create_agent(self, user_id: str, agent_information: Any):
-        all_agent_information = {"created_by": user_id, **agent_information.model_dump()}
-        return await self.agent_information_manager.create_agent(all_agent_information)
+    async def create_agent(self, user_id: str, agent_information: Any) -> SimplifyAgentInformation:
+        all_agent_information = {
+            "created_by": user_id, 
+            "agent_id": f"{generate_uuid()}", 
+            "created_at": get_datetime_now(),
+            **agent_information.model_dump()
+            }
+        print("ajajaja", all_agent_information, agent_information.model_dump())
+        created_register = await self.agent_information_manager.create_agent(all_agent_information)
+        
+        if len(created_register) < 1:
+            print("Error al encontrar el agente")
 
-    async def get_agents_by_user(self, user_id: str) -> List[Any]:
-        return await self.agent_information_manager.get_agents_by_user(user_id)
+        print("register", created_register[0])
 
-    async def get_agent_by_user(self, agent_id: str) -> Any:
-        return await self.agent_information_manager.get_specific_agent_by_user(agent_id)
+        return SimplifyAgentInformation(**created_register[0])
+        
+    async def get_agents_by_user(self, user_id: str) -> List[CompletedAgentInformation]:
+        all_agents = await self.agent_information_manager.get_agents_by_user(user_id)
+        print("all_agents===", all_agents)
+        return [ SimplifyAgentInformation(**agent)  for agent in all_agents  ]        
+
+    async def get_agent_by_user(self, agent_id: str) -> CompletedAgentInformation:
+        selected_agent = await self.agent_information_manager.get_specific_agent_by_user(agent_id)
+        return CompletedAgentInformation(**selected_agent)
+    
 
          

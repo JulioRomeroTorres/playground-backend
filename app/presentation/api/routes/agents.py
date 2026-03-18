@@ -31,26 +31,26 @@ STREAMING_HEADERS = {
     "Transfer-Encoding": "chunked"
 }
 
-@router.post("users/{user_id}/")
+@router.post("/users/{user_id}/")
 async def create_agent(user_id: str, agent_information_request: AgentInformationRequest):
     handle_get_tools = get_handle_agents_use_case()
-    tools_by_user = await handle_get_tools.create_agent(user_id, agent_information_request)
+    created_agent = await handle_get_tools.create_agent(user_id, agent_information_request)
 
-    return JSONResponse(tools_by_user.model_dump(), headers={"status_code": "200"})
+    return JSONResponse(created_agent.format_json(), headers={"status_code": "200"})
 
-@router.get("users/{user_id}/")
+@router.get("/users/{user_id}/")
 async def get_agents_by_user_id(user_id: str):
     handle_get_agents = get_handle_agents_use_case()
     agents_by_user = await handle_get_agents.get_agents_by_user(user_id)
-
-    return JSONResponse(agents_by_user.model_dump(), headers={"status_code": "200"})
+    formatted_agents = [ agent.format_json() for agent in  agents_by_user ]
+    return JSONResponse(formatted_agents, headers={"status_code": "200"})
 
 @router.get("/{agent_id}/")
 async def get_specific_agent_by_user_id(agent_id: str):
     handle_get_agents = get_handle_agents_use_case()
     specific_agent = await handle_get_agents.get_agent_by_user(agent_id)
 
-    return JSONResponse(specific_agent.model_dump(), headers={"status_code": "200"})
+    return JSONResponse(specific_agent.format_json(), headers={"status_code": "200"})
 
 @router.post("/{agent_id}/conversations/{conversation_id}/messages")
 async def chat_agent(agent_id: str, conversation_id: str, request: ConversationRequest):

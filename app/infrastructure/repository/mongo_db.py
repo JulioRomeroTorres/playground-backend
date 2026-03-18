@@ -1,6 +1,6 @@
 from bson import ObjectId
 from pymongo import AsyncMongoClient
-from typing import Coroutine, Optional, Any, Dict, List
+from typing import Optional, Any, Dict, List, Union
 from app.domain.repository.item_sql_repository import IItemSqlRepository
 
 JsonType = Dict[str, Any]
@@ -18,9 +18,10 @@ class MongoDbRepository(IItemSqlRepository):
     def _create_collection_reference(self, collection_name: str):
         return self._get_collection(collection_name) if self.collection is None else self.collection
 
-    async def get_item_by_id(self, item_id: str, collection_name: Optional[str] = None) -> Optional[JsonType]:
+    async def get_item_by_id(self, item_id: Union[ObjectId, str], collection_name: Optional[str] = None) -> Optional[JsonType]:
+        object_id = ObjectId(item_id) if isinstance(item_id, str) else item_id
         collection = self._create_collection_reference(collection_name)
-        document = await collection.find_one({"_id": ObjectId(item_id)})
+        document = await collection.find_one({"_id": object_id})
         return document
 
     async def get_items_by_filter(self, filter: Dict[str, Any], projection: Optional[Dict[str, Any]] = None,

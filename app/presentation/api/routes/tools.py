@@ -22,14 +22,14 @@ router = APIRouter(
 )
 
 
-@router.post("users/{user_id}/")
+@router.post("/users/{user_id}/")
 async def create_tool(user_id: str, tool_information_request: ToolInformationRequest):
     handle_get_tools = get_handle_tools_use_case()
     tools_by_user = await handle_get_tools.create_tool(user_id, tool_information_request)
 
-    return JSONResponse(tools_by_user.model_dump(), headers={"status_code": "200"})
+    return JSONResponse(tools_by_user.format_json(), headers={"status_code": "200"})
 
-@router.get("users/{user_id}/")
+@router.get("/users/{user_id}/")
 async def get_agents_by_user_id(user_id: str):
     handle_get_tools = get_handle_tools_use_case()
     tools_by_user = await handle_get_tools.get_tool_by_user(user_id)

@@ -45,15 +45,13 @@ class AgentTrace(BaseModel):
         }
 
 class AgentInformationRequest(BaseModel):
-    created_at: str = Field(description="Date Time")
     name: str = Field(decription="Agent Name")
-    description: str = Field(description="Agent Description")
-    version: str = Field(description="Agent Version")
-    tools_ids: Optional[str] = Field(description="Tools Ids", default=[])
-    emable_memory: Optional[bool] = Field(description="Enable Long Memory", default= False)
+    description: Optional[str] = Field(description="Agent Description", default="")
+    version: Optional[str] = Field(description="Agent Version", default="v1")
+    tools_ids: Optional[List[str]] = Field(description="Tools Ids", default=[])
+    enable_memory: Optional[bool] = Field(description="Enable Long Memory", default= False)
 
 class ToolInformationRequest(BaseModel):
-    created_at: str = Field(description="Date Time")
     name: str = Field(decription="Agent Name")
     description: str = Field(description="Agent Description")
     input_params: Optional[Dict[str, Any]] = Field(description="Input Params", default=None)
