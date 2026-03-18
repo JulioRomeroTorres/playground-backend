@@ -1,5 +1,6 @@
 from bson import ObjectId
 from pymongo import AsyncMongoClient
+from pymongo import In
 from typing import Coroutine, Optional, Any, Dict, List
 from app.domain.repository.item_sql_repository import IItemSqlRepository
 
@@ -31,7 +32,7 @@ class MongoDbRepository(IItemSqlRepository):
             projection=projection
         ).to_list(length=length)
 
-    async def insert_item(self, raw_data: JsonType, collection_name: Optional[str] = None) -> None:
+    async def insert_item(self, raw_data: JsonType, collection_name: Optional[str] = None) -> Any:
         collection = self._create_collection_reference(collection_name)
         return await collection.insert_one(raw_data)
 

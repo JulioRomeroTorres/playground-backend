@@ -1,9 +1,12 @@
 from pydantic import Field
 from typing import Any, Dict, Annotated 
-from app.domain.dispatcher.tool_settings import ToolSettings
+from app.domain.agent.tools import ToolSettings
 from agent_framework import ai_function,  AIFunction
 import json
 from app.infrastructure.repository.http import HttpRepository
+
+
+import asyncio
 
 class DynamicToolFactory:
     
@@ -18,6 +21,10 @@ class DynamicToolFactory:
                 f"{param_name}": value
                 for param_name, value in kwargs.items() if param_name in valid_param_tool
             }
+
+            if tool_def.logical_content:
+                return await cls._execute_custom_logic(tool_def.logical_content, seleted_args)
+
             return await cls._execute_tool_logic(tool_def, seleted_args)
         
         final_tool = AIFunction(
@@ -28,6 +35,25 @@ class DynamicToolFactory:
         )
     
         return final_tool
+
+    @staticmethod
+    async def _execute_custom_logic(logical_content: str, converted_args: Dict[str, Any]) -> str:
+        namespace = {}
+        try:
+            exec(logical_content, namespace)
+            functions = {k: v for k, v in namespace.items() if callable(v)}
+            result = None
+            if 'execute' in functions:
+                current_function = functions['execute']
+                if asyncio.iscoroutinefunction(current_function):
+                    result =  await current_function(**converted_args)
+                else:
+                    result= current_function(**converted_args)
+
+            return f"Tool ejecutada con éxito, este es el resultado: {result}"
+            
+        except Exception as e:
+            return f"Hubo un error al ajecutar la Tool {e}"
     
     @staticmethod
     async def _execute_tool_logic(tool_def: ToolSettings, converted_args: Dict[str, Any]) -> str:

@@ -1,7 +1,12 @@
 from abc import ABC, abstractmethod
 from typing import Any, Optional, List, Dict
 from app.domain.llm.llm_settings import LlmSettings
-from agent_framework import ChatAgent
+from agent_framework import (
+    ChatAgent, ChatMessage, 
+    AgentRunResponse, AgentRunResponseUpdate
+)
+from app.domain.agent.agent import AgentSettings
+from typing import AsyncIterable
 
 class IBaseAgentFactory(ABC):
     agent: ChatAgent
@@ -59,7 +64,31 @@ class IBaseAgentFactory(ABC):
         self.agent = self.create_agent(llm_setting, session_id, thread_id, db_client)
 
 class IAgentCore(ABC):
+    
     @abstractmethod
-    def create_agent(self, conversation_id: str) -> IBaseAgentFactory:
+    def create_agent(self, conversation_id: str, agent_settings: AgentSettings) -> None:
+        pass
+
+    @abstractmethod
+    def create_uri_content(self, metadata: Dict[str, str]):
+        pass
+
+    @abstractmethod
+    def prepare_content(
+                    self, message: str, additional_files: Optional[List[str]] = []
+                    ) -> ChatMessage:
+        
+        pass
+
+    @abstractmethod
+    async def generate_stream_content(self, message: str, additional_files: Optional[List[str]] = []) -> AsyncIterable[AgentRunResponseUpdate]:
+        pass
+    
+    @abstractmethod
+    async def generate_content(self, message: str, additional_files: Optional[List[str]] = []) -> AgentRunResponse:
+        pass
+    
+    @abstractmethod
+    async def apply_guardial(self, message: str, reject_thresholds: Dict[str, Any], blocklist_names: Optional[List[str]] = []) -> None:
         pass
 

@@ -2,7 +2,7 @@ from typing import Any
 from functools import lru_cache
 from app.config import get_settings
 
-from app.application.services.agent_manager import AgentManager
+from app.infrastructure.agent_core import AgentCore
 from app.application.services.thread_manager import ThreadManager
 from app.application.services.document_manager import DocumentManager
 
@@ -13,6 +13,14 @@ from app.application.use_cases.handle_conversation import (
 
 from app.application.use_cases.handle_document import (
     HandleDocumentsUseCase
+)
+
+from app.application.use_cases.handle_agents import (
+    HandleAgentsUseCase
+)
+
+from app.application.use_cases.handle_tools import (
+    HandleToolsUseCase
 )
 
 from app.infrastructure.client_factory import ChatClientFactory
@@ -29,6 +37,7 @@ from app.infrastructure.repository.storage_account import StorageAccountReposito
 
 from pymongo import AsyncMongoClient
 from app.infrastructure.managers.http_manager import HttpRepositoryManager
+from app.application.services.agent_information_manager import AgentInformationManager
 from azure.ai.contentsafety.aio import ContentSafetyClient
 from azure.core.credentials import AzureKeyCredential
 
@@ -61,9 +70,16 @@ class DependencyContainer:
         self._factories["document_repository"] = lambda: DocumentManagerRepository()
         self._factories["storage_repository"] = lambda: StorageAccountRepository(self._get_storage_client(), settings.storage_account_name)
 
+        self._factories["agent_information_manager"] = lambda: AgentInformationManager(
+            self.get('db_repository')
+        )
 
-        self._factories["agent_manager"] = lambda: AgentManager(
-            self.get('agent_core'),
+        self._factories["tool_manager"] = lambda: AgentInformationManager(
+            self.get('db_repository')
+        )
+
+        self._factories["agent_manager"] = lambda: AgentCore(
+            self._get_db_client(),
             self.get('content_safety_repository'),
         )
         self._factories["thread_manager"] = lambda: ThreadManager(
@@ -75,7 +91,7 @@ class DependencyContainer:
                 self.get('storage_repository')
             )
 
-        self._factories["agent_core"] = lambda: AgentCore(self._get_db_client(), self.get('storage_repository'))
+        self._factories["agent_core"] = lambda: AgentCore(self._get_db_client(), self.get('content_safety_repository'))
 
         # Orchestrator (depends on chat_client and conversation_manager)
         self._factories["orchestrator"] = lambda: WorkflowOrchestrator(
@@ -97,22 +113,34 @@ class DependencyContainer:
 
     def get_handle_message_use_case(self) -> HandleMessageUseCase:
         return HandleMessageUseCase(
-            agent_manager=self.get("agent_manager")
+            agent_core=self.get("agent_core")
         )
 
     def get_handle_message_stream_use_case(self) -> HandleMessageStreamUseCase:
           return HandleMessageStreamUseCase(
-            agent_manager=self.get("agent_manager")
+            agent_information_manager=self.get("agent_information_manager"),
+            agent_core=self.get("agent_core")
         )
 
     def get_handle_threads_use_case(self) -> HandleThreadsUseCase:
           return HandleThreadsUseCase(
+            agent_information_manager=self.get("agent_information_manager"),
             thread_manager=self.get("thread_manager")
         )
 
     def get_handle_documents_use_case(self) -> HandleDocumentsUseCase:
         return HandleDocumentsUseCase(
             document_manager=self.get("document_manager")
+        )
+    
+    def get_handle_agents_use_case(self) -> HandleAgentsUseCase:
+        return HandleAgentsUseCase(
+            agent_manager=self.get("agent_information_manager")
+        )
+    
+    def get_handle_tools_use_case(self) -> HandleToolsUseCase:
+        return HandleToolsUseCase(
+            tool_manager=self.get("tool_manager")
         )
 
     def clear(self):

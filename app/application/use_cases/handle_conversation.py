@@ -6,8 +6,11 @@ from typing import (
 from app.domain.agent import AgentResponse
 from app.domain.agent.agent import ConversationResponse
 
-from app.application.services.agent_manager import AgentManager
+from app.domain.agent_core.service import IAgentCore
 from app.application.services.thread_manager import ThreadManager
+from app.domain.agent.agent import AgentSettings
+
+from app.application.services.agent_information_manager import AgentInformationManager
 
 from app.domain.conversation.conversation import (
     StartStreamingResponse, DataStreamingResponse, EndStreamingResponse,
@@ -19,37 +22,41 @@ from app.domain.utils import generate_uuid, get_current_datetime
 class MessageUseCase:
     def __init__(
         self,
-        agent_manager: AgentManager
+        agent_core: IAgentCore,
+        agent_information_manager: AgentInformationManager
         ):
-        self.agent_manager = agent_manager
+        self.agent_core = agent_core
+        self.agent_information_manager = agent_information_manager
         pass
 
-    def create_thread(self, conversation_id: str) -> None:
-        self.agent_manager.create_thread(conversation_id)
+    async def create_thread(self, conversation_id: str) -> None:
+        raw_agent_settings = await self.agent_information_manager.get_specific_agent_by_user()
+        agent_settings = AgentSettings(**raw_agent_settings)
+        self.agent_core.create_agent(conversation_id, agent_settings)
     
 class HandleMessageUseCase(MessageUseCase):
     def __init__(
         self,
-        agent_manager: AgentManager
+        agent_information_manager: AgentInformationManager,
+        agent_core: IAgentCore
     ):
-        super().__init__(agent_manager)
+        super().__init__(agent_core, agent_information_manager)
 
     async def execute(
         self,
         conversation_id: str,
         message: str,
+        agent_id: str,
         additional_files: Optional[List[str]] = [],
         decision: Optional[str] = None,
-        additional_information: Optional[Dict[str, Any]] = dict(),
-        trace: Optional[Dict[str, Any]] = None
     ) -> AgentResponse:
 
-        self.create_thread(conversation_id)
+        await self.create_thread(conversation_id)
 
-        agent_response = await self.agent_manager.generate_content(
+        agent_response = await self.agent_core.generate_content(
             message=message,
             additional_files=additional_files,
-            additional_information=additional_information
+            agent_id=agent_id
             )
 
         return AgentResponse(
@@ -65,28 +72,27 @@ class HandleMessageUseCase(MessageUseCase):
 class HandleMessageStreamUseCase(MessageUseCase):
     def __init__(
         self,
-        agent_manager: AgentManager
+        agent_information_manager: AgentInformationManager,
+        agent_core: IAgentCore
     ):
-        super().__init__(agent_manager)
+        super().__init__(agent_core, agent_information_manager)
 
     async def execute(
         self,
         conversation_id: str,
         message: str,
+        agent_id: str,
         additional_files: Optional[List[str]] = [],
-        decision: Optional[str] = None,
-        additional_information: Optional[Dict[str, Any]] = dict(),
-        trace: Optional[Dict[str, Any]] = None
+        decision: Optional[str] = None
     ) -> AsyncGenerator[dict[str, Any], None]:
         
-        self.create_thread(conversation_id)
+        await self.create_thread(conversation_id)
 
-        yield StartStreamingResponse(agent=self.agent_manager.agent_name).model_dump()
+        yield StartStreamingResponse(agent=self.agent_core.agent_name).model_dump()
 
-        async for chunk in self.agent_manager.generate_stream_content(
+        async for chunk in self.agent_core.generate_stream_content(
             message=message,
-            additional_files=additional_files,
-            additional_information=additional_information
+            additional_files=additional_files
         ):
             yield DataStreamingResponse(type=TypeStreamingResponseEnum.DATA.value, text=chunk.text).model_dump()
 

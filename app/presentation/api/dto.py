@@ -44,12 +44,28 @@ class AgentTrace(BaseModel):
             "identity.subdomain": self.identity_subdomain
         }
 
+class AgentInformationRequest(BaseModel):
+    created_at: str = Field(description="Date Time")
+    name: str = Field(decription="Agent Name")
+    description: str = Field(description="Agent Description")
+    version: str = Field(description="Agent Version")
+    tools_ids: Optional[str] = Field(description="Tools Ids", default=[])
+    emable_memory: Optional[bool] = Field(description="Enable Long Memory", default= False)
+
+class ToolInformationRequest(BaseModel):
+    created_at: str = Field(description="Date Time")
+    name: str = Field(decription="Agent Name")
+    description: str = Field(description="Agent Description")
+    input_params: Optional[Dict[str, Any]] = Field(description="Input Params", default=None)
+    logic_content: str = Field(description="Logic content of tool")
+
 class PrimitiveConversationInformation(BaseModel):
     message: str = Field(description="Current user message")
     additional_files: Optional[List[str]] = Field(
         default_factory=list,
         description="List of attached files"
     )
+
 class ConversationRequest(PrimitiveConversationInformation):
     trace: AgentTrace = Field(
         description="trace information"

@@ -6,10 +6,12 @@ from fastapi.responses import StreamingResponse
 from app.presentation.api.dependencies import (
     get_handle_message_use_case,
     get_handle_message_stream_use_case,
-    get_handle_threads_use_case
+    get_handle_threads_use_case,
+    get_handle_agents_use_case
 )
 from app.presentation.api.dto import (
-    ConversationRequest, ConversationResponse
+    ConversationRequest, ConversationResponse,
+    AgentInformationRequest
 )
 from app.presentation.streaming.sse import stream_response
 
@@ -29,16 +31,29 @@ STREAMING_HEADERS = {
     "Transfer-Encoding": "chunked"
 }
 
+@router.post("users/{user_id}/")
+async def create_agent(user_id: str, agent_information_request: AgentInformationRequest):
+    handle_get_tools = get_handle_agents_use_case()
+    tools_by_user = await handle_get_tools.create_agent(user_id, agent_information_request)
+
+    return JSONResponse(tools_by_user.model_dump(), headers={"status_code": "200"})
+
 @router.get("users/{user_id}/")
 async def get_agents_by_user_id(user_id: str):
-    pass
+    handle_get_agents = get_handle_agents_use_case()
+    agents_by_user = await handle_get_agents.get_agents_by_user(user_id)
 
-@router.get("/{agent_id}/users/{user_id}/")
-async def get_specific_agent_by_user_id(agent_id: str, user_id: str):
-    pass
+    return JSONResponse(agents_by_user.model_dump(), headers={"status_code": "200"})
 
-@router.post("/conversations/{conversation_id}/messages")
-async def chat_agent(conversation_id: str, request: ConversationRequest):
+@router.get("/{agent_id}/")
+async def get_specific_agent_by_user_id(agent_id: str):
+    handle_get_agents = get_handle_agents_use_case()
+    specific_agent = await handle_get_agents.get_agent_by_user(agent_id)
+
+    return JSONResponse(specific_agent.model_dump(), headers={"status_code": "200"})
+
+@router.post("/{agent_id}/conversations/{conversation_id}/messages")
+async def chat_agent(agent_id: str, conversation_id: str, request: ConversationRequest):
     handle_message = get_handle_message_use_case()
 
     logger.info(f"Thread conversation {conversation_id}")
@@ -46,7 +61,8 @@ async def chat_agent(conversation_id: str, request: ConversationRequest):
     response = await handle_message.execute(
         message=request.message,
         additional_files=request.additional_files,
-        conversation_id=conversation_id
+        conversation_id=conversation_id,
+        agent_id=agent_id
     )
 
     chat_response = ConversationResponse(
@@ -55,10 +71,9 @@ async def chat_agent(conversation_id: str, request: ConversationRequest):
     )
 
     return JSONResponse(chat_response.model_dump(), headers={"status_code": "200"})
-    pass
 
-@router.post("/conversations/{conversation_id}/messages/stream")
-async def chat_stream_agent(conversation_id: str, request: ConversationRequest):
+@router.post("/{agent_id}/conversations/{conversation_id}/messages/stream")
+async def chat_stream_agent(agent_id: str, conversation_id: str, request: ConversationRequest):
 
     handle_message_stream = get_handle_message_stream_use_case()
 
@@ -70,7 +85,8 @@ async def chat_stream_agent(conversation_id: str, request: ConversationRequest):
                 handle_message_stream.execute(
                     message=request.message,
                     additional_files=request.additional_files,
-                    conversation_id=conversation_id
+                    conversation_id=conversation_id,
+                    agent_id=agent_id
                 )
             ):
                 yield chunk
@@ -83,7 +99,7 @@ async def chat_stream_agent(conversation_id: str, request: ConversationRequest):
         headers=STREAMING_HEADERS
     )
 
-@router.post("/question/")
+@router.post("/{agent_id}/question/")
 async def question_agent(request: ConversationRequest):
     pass
 

@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Any
+from typing import Any, List
 from agent_framework import ChatMessage, UsageDetails
 from pydantic import BaseModel, Field
 
@@ -31,3 +31,10 @@ class ExternalAgentResponse(BaseModel):
 class ConversationResponse(BaseModel):
     conversation_id: str = Field(description="Conversation Id")
     created_at: str = Field(description="created_at")
+
+class AgentSettings(BaseModel):
+    name: str
+    version: str
+    system_instruction: str
+    model: str
+    tools_information: List[Any]
