@@ -1,6 +1,5 @@
 from bson import ObjectId
 from pymongo import AsyncMongoClient
-from pymongo import In
 from typing import Coroutine, Optional, Any, Dict, List
 from app.domain.repository.item_sql_repository import IItemSqlRepository
 

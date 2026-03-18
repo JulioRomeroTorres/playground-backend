@@ -1,5 +1,5 @@
 [project]
-name = "orchestrator-agent-backend"
+name = "playground-agent"
 version = "1.0.0"
 description = "Multi-agent orchestrator system using Microsoft Agent Framework"
 readme = "README.md"
