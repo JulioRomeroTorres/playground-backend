@@ -38,7 +38,7 @@ async def get_specific_agent_by_user_id(agent_id: str, user_id: str):
     pass
 
 @router.post("/conversations/{conversation_id}/messages")
-async def chat_agent(session_id: str, request: ConversationRequest):
+async def chat_agent(conversation_id: str, request: ConversationRequest):
     handle_message = get_handle_message_use_case()
 
     logger.info(f"Thread conversation {conversation_id}")
@@ -57,12 +57,12 @@ async def chat_agent(session_id: str, request: ConversationRequest):
     return JSONResponse(chat_response.model_dump(), headers={"status_code": "200"})
     pass
 
-@router.post("/conversations/{session_id}/messages/stream")
-async def chat_stream_agent(session_id: str, request: ConversationRequest):
+@router.post("/conversations/{conversation_id}/messages/stream")
+async def chat_stream_agent(conversation_id: str, request: ConversationRequest):
 
     handle_message_stream = get_handle_message_stream_use_case()
 
-    logger.info(f"Thread conversation {session_id}")
+    logger.info(f"Thread conversation {conversation_id}")
 
     async def generate():
         try:
@@ -70,7 +70,7 @@ async def chat_stream_agent(session_id: str, request: ConversationRequest):
                 handle_message_stream.execute(
                     message=request.message,
                     additional_files=request.additional_files,
-                    conversation_id=session_id
+                    conversation_id=conversation_id
                 )
             ):
                 yield chunk
