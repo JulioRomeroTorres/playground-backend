@@ -44,16 +44,14 @@ async def chat_agent(session_id: str, request: ConversationRequest):
     logger.info(f"Thread conversation {conversation_id}")
 
     response = await handle_message.execute(
-        message=conversation_request.message,
-        additional_files=conversation_request.additional_files,
-        conversation_id=conversation_id,
-        additional_information=conversation_request.additional_information,
-        trace=conversation_request.trace.to_json()
+        message=request.message,
+        additional_files=request.additional_files,
+        conversation_id=conversation_id
     )
 
     chat_response = ConversationResponse(
         content=response.message,
-        metadata={**response.metadata, "model_name": get_settings().azure_openai_deployment},
+        metadata={**response.metadata, "model_name": response.model_name},
     )
 
     return JSONResponse(chat_response.model_dump(), headers={"status_code": "200"})
@@ -64,17 +62,15 @@ async def chat_stream_agent(session_id: str, request: ConversationRequest):
 
     handle_message_stream = get_handle_message_stream_use_case()
 
-    logger.info(f"Thread conversation {conversation_id}")
+    logger.info(f"Thread conversation {session_id}")
 
     async def generate():
         try:
             async for chunk in stream_response(
                 handle_message_stream.execute(
-                    message=conversation_request.message,
-                    additional_files=conversation_request.additional_files,
-                    conversation_id=conversation_id,
-                    additional_information=conversation_request.additional_information,
-                    trace=conversation_request.trace.to_json()
+                    message=request.message,
+                    additional_files=request.additional_files,
+                    conversation_id=session_id
                 )
             ):
                 yield chunk

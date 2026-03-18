@@ -8,9 +8,7 @@ from app.presentation.api.dependencies import (
     get_handle_message_stream_use_case,
     get_handle_threads_use_case
 )
-from app.presentation.api.dto import (
-    ConversationRequest, ConversationResponse
-)
+
 from app.presentation.streaming.sse import stream_response
 
 logger = logging.getLogger(__name__)
