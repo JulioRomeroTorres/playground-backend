@@ -1,0 +1,150 @@
+[project]
+name = "orchestrator-agent-backend"
+version = "1.0.0"
+description = "Multi-agent orchestrator system using Microsoft Agent Framework"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "quart>=0.19.0",
+    "quart-cors>=0.7.0",
+    "hypercorn>=0.16.0",
+    "pydantic>=2.0.0,<3.0.0",
+    "pydantic-settings>=2.0.0",
+    "fastapi==0.127.0",
+    "uvicorn==0.40.0",
+    "agent-framework-a2a==1.0.0b260107",
+    "agent-framework-ag-ui==1.0.0b260107",
+    "agent-framework-anthropic==1.0.0b260107",
+    "agent-framework-azure-ai==1.0.0b260107",
+    "agent-framework-azure-ai-search==0.0.0a1",
+    "agent-framework-azurefunctions==1.0.0b260107",
+    "agent-framework-chatkit==1.0.0b260107",
+    "agent-framework-copilotstudio==1.0.0b260107",
+    "agent-framework-core==1.0.0b260107",
+    "agent-framework-declarative==1.0.0b260107",
+    "agent-framework-devui==1.0.0b260107",
+    "agent-framework-lab==1.0.0b251024",
+    "agent-framework-mem0==1.0.0b260107",
+    "agent-framework-ollama==1.0.0b260107",
+    "agent-framework-purview==1.0.0b260107",
+    "agent-framework-redis==1.0.0b260107",
+    "agent-framework==1.0.0b260107",
+    "azure-cosmos",
+    "azure-identity",
+    "python-dotenv>=1.0.0",
+    "openai>=1.0.0",
+    "prompty>=0.1.0",
+    "jinja2>=3.1.0",
+    "azure-search-documents==11.6.0b9",
+    "opentelemetry-exporter-otlp-proto-grpc",
+    "PyJWT==2.10.1",
+    "azure-ai-contentsafety==1.0.0",
+    "azure-ai-textanalytics==5.2.0",
+    "pymongo==4.16.0",
+    "azure-storage-blob==12.28.0",
+    "python-docx==1.2.0",
+    "python-pptx==1.0.2",
+    "PyMuPDF==1.27.1",
+    "python-multipart==0.0.22",
+    "opentelemetry-semantic-conventions-ai==0.4.13",
+    "azure-ai-projects==2.0.0b3"
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.4.0",
+    "pytest-asyncio>=0.21.0",
+    "pytest-cov>=4.1.0",
+    "ruff>=0.1.0",
+    "black>=23.0.0",
+    "pre-commit>=3.5.0",
+]
+
+[build-system]
+requires = ["setuptools>=68.0.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["app*"]
+
+[tool.black]
+line-length = 100
+target-version = ["py310", "py311", "py312"]
+include = '\.pyi?$'
+extend-exclude = '''
+/(
+  \.git
+  | \.venv
+  | venv
+  | build
+  | dist
+)/
+'''
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+select = [
+    "E",
+    "F",
+    "W",
+    "I",
+    "N",
+    "UP",
+    "YTT",
+    "ASYNC",
+    "S",
+    "BLE",
+    "B",
+    "A",
+    "C4",
+    "T10",
+    "ISC",
+    "ICN",
+    "G",
+    "PIE",
+    "PYI",
+    "RSE",
+    "RET",
+    "SIM",
+    "TID",
+    "ARG",
+    "PTH",
+    "PD",
+    "PGH",
+    "PL",
+    "TRY",
+    "RUF",
+]
+ignore = [
+    "S101",
+    "TRY003",
+    "PLR0913",
+    "UP007",
+]
+
+[tool.ruff.per-file-ignores]
+"tests/**/*.py" = ["S101", "PLR2004", "ARG001"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+asyncio_mode = "auto"
+addopts = "-v --strict-markers --tb=short"
+
+[tool.coverage.run]
+source = ["app"]
+omit = ["tests/*", "**/__init__.py"]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if __name__ == .__main__.:",
+    "if TYPE_CHECKING:",
+    "class .*\\bProtocol\\):",
+    "@(abc\\.)?abstractmethod",
+]

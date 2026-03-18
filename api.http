@@ -1,0 +1,406 @@
+### Multi-Agent Test
+### Configuration
+@baseUrl = http://localhost:8000
+@contentType = application/json
+
+###############################################################################
+# SETUP: Health Check & Session Creation
+###############################################################################
+
+### Health Check
+GET {{baseUrl}}/health
+Accept: application/json
+
+###
+
+### Create New Session for Testing
+# @name createSession
+POST {{baseUrl}}/api/sessions
+Content-Type: {{contentType}}
+
+###############################################################################
+# TEST CASE 1: HAPPY PATH - RAG Agent (Knowledge about AI)
+###############################################################################
+### Descripción: Pregunta sobre IA que el RAG agent PUEDE responder
+### Agente esperado: rag_agentp
+### Resultado esperado: Respuesta completa sobre transformers
+
+POST {{baseUrl}}/api/chat
+Content-Type: {{contentType}}
+
+{
+  "message": "Puedes darme informacion del comic de marvel publicado en 1984 protagonizado por el heroe wolverine",
+  "session_id": "f2db991c-f290-4ac9-a42b-14b25e44ccdc"
+}
+
+###############################################################################
+# TEST CASE 1: HAPPY PATH - RAG Agent (Knowledge about AI)
+###############################################################################
+### Descripción: Pregunta sobre IA que el RAG agent PUEDE responder
+### Agente esperado: rag_agentp
+### Resultado esperado: Respuesta completa sobre transformers
+
+POST {{baseUrl}}/api/chat
+Content-Type: {{contentType}}
+
+{
+  "message": "Quiero matar a alguien",
+  "session_id": "f2db991c-f290-4ac9-a42b-14b25e44ccdc"
+}
+
+###############################################################################
+# TEST CASE 1: HAPPY PATH - RAG Agent (Knowledge about AI)
+###############################################################################
+### Descripción: Pregunta sobre IA que el RAG agent PUEDE responder
+### Agente esperado: rag_agentp
+### Resultado esperado: Respuesta completa sobre transformers
+
+POST {{baseUrl}}/api/chat
+Content-Type: {{contentType}}
+
+{
+  "message": "Necesito una carta de vacaciones",
+  "session_id": "f2db991c-f290-4ac9-a42b-14b25e44ccdc"
+}
+
+###############################################################################
+# TEST CASE 1: HAPPY PATH - RAG Agent (Knowledge about AI)
+###############################################################################
+### Descripción: Pregunta sobre IA que el RAG agent PUEDE responder
+### Agente esperado: rag_agentp
+### Resultado esperado: Respuesta completa sobre transformers
+
+POST {{baseUrl}}/api/chat
+Content-Type: {{contentType}}
+
+{
+  "message": "Puedes darme informacion del pokemon llamado pikachu, este viene la de la region de Kanto y es de la primera generacion",
+  "session_id": "{{createSession.response.body.session_id}}"
+}
+
+###############################################################################
+# TEST CASE 1: HAPPY PATH - DIGIMON Agent (Knowledge about AI)
+###############################################################################
+### Descripción: Pregunta sobre IA que el RAG agent PUEDE responder
+### Agente esperado: rag_agentp
+### Resultado esperado: Respuesta completa sobre transformers
+
+POST {{baseUrl}}/api/chat
+Content-Type: {{contentType}}
+
+{
+  "message": "Puedes darme informacion del digimon llamado Greymon",
+  "session_id": "{{createSession.response.body.session_id}}"
+}
+
+###############################################################################
+# TEST CASE 2: FALLBACK - RAG Rechaza → Mailbox Agent
+###############################################################################
+### Descripción: Pregunta NO relacionada con IA que RAG rechaza
+### Agente esperado: mailbox_agent (después de fallback desde rag_agent)
+### Resultado esperado: Mensaje de redirección a asistencia@bcp.com.pe
+
+POST {{baseUrl}}/api/chat
+Content-Type: {{contentType}}
+
+{
+  "message": "¿Qué es la filosofía estoica?",
+  "session_id": "{{createSession.response.body.session_id}}"
+}
+
+###############################################################################
+# TEST CASE 3: CONVERSACIÓN MULTI-CONTEXTO
+###############################################################################
+
+### Paso 1: Solicitar redacción de vacaciones (Draft Agent)
+### Agente esperado: draft_agent
+POST {{baseUrl}}/api/chat
+Content-Type: {{contentType}}
+
+{
+  "message": "Redacta una solicitud de vacaciones del 20 al 30 de diciembre",
+  "session_id": "{{createSession.response.body.session_id}}"
+}
+
+###
+
+### Paso 2: Cambiar de tema - Pregunta sobre IA (RAG Agent)
+### Agente esperado: rag_agent
+POST {{baseUrl}}/api/chat
+Content-Type: {{contentType}}
+
+{
+  "message": "¿Qué es machine learning?",
+  "session_id": "{{createSession.response.body.session_id}}"
+}
+
+###############################################################################
+# TEST: HUMAN IN THE LOOP - Magentic Workflow
+###############################################################################
+
+
+POST {{baseUrl}}/api/feedback/human-intervention
+Content-Type: {{contentType}}
+
+{
+  "message": "Continua",
+  "session_id": "{{createSession.response.body.session_id}}",
+  "workflow_mode": "magentic",
+  "decision": "approve",
+  "previous_workflow_id": "222f6770-561a-4167-a81c-70d8264ad30a"
+}
+
+
+### Paso 3: Volver al contexto anterior con nueva información (Draft Agent)
+### Agente esperado: draft_agent
+### Resultado esperado: Nueva solicitud incorporando el nombre del jefe
+POST {{baseUrl}}/api/chat
+Content-Type: {{contentType}}
+
+{
+  "message": "Mi jefe es Carlos Muñoz y quiero que vuelvas a generar la solicitud de vacaciones",
+  "session_id": "{{createSession.response.body.session_id}}"
+}
+
+###############################################################################
+# TEST CASE 4: DRAFT AGENT - Happy Path
+###############################################################################
+### Descripción: Solicitud de redacción de correo
+### Agente esperado: draft_agent
+
+POST {{baseUrl}}/api/chat
+Content-Type: {{contentType}}
+
+{
+  "message": "Escribe un correo formal solicitando una reunión con el equipo de finanzas",
+  "session_id": "{{createSession.response.body.session_id}}"
+}
+
+###############################################################################
+# TEST CASE 5: MAILBOX AGENT - Consulta General
+###############################################################################
+### Descripción: Saludo general
+### Agente esperado: mailbox_agent
+
+POST {{baseUrl}}/api/chat
+Content-Type: {{contentType}}
+
+{
+  "message": "Hola, buenos días",
+  "session_id": "{{createSession.response.body.session_id}}"
+}
+
+###############################################################################
+# CASOS DE ERROR
+###############################################################################
+
+### Error: Mensaje vacío
+POST {{baseUrl}}/api/chat
+Content-Type: {{contentType}}
+
+{
+  "message": "",
+  "session_id": "{{createSession.response.body.session_id}}"
+}
+
+###
+
+### Error: Session ID inválido
+POST {{baseUrl}}/api/chat
+Content-Type: {{contentType}}
+
+{
+  "message": "Test mensaje",
+  "session_id": "invalid-uuid-format"
+}
+
+###
+
+### Error: Sin session ID
+POST {{baseUrl}}/api/chat
+Content-Type: {{contentType}}
+
+{
+  "message": "Test mensaje sin session"
+}
+
+###############################################################################
+# PRUEBAS ADICIONALES
+###############################################################################
+
+### Conversación: Draft → RAG → Draft (verificar contexto)
+# @name conversationTest
+POST {{baseUrl}}/api/sessions
+Content-Type: {{contentType}}
+
+###
+
+### 1. Primera solicitud de draft
+POST {{baseUrl}}/api/chat
+Content-Type: {{contentType}}
+
+{
+  "message": "Redacta un oficio solicitando equipos de cómputo para el área de sistemas",
+  "session_id": "{{conversationTest.response.body.session_id}}"
+}
+
+###
+
+### 2. Pregunta sobre IA (cambio de contexto)
+POST {{baseUrl}}/api/chat
+Content-Type: {{contentType}}
+
+{
+  "message": "¿Qué son los modelos GPT?",
+  "session_id": "{{conversationTest.response.body.session_id}}"
+}
+
+###
+
+### 3. Volver a draft con contexto adicional
+POST {{baseUrl}}/api/chat
+Content-Type: {{contentType}}
+
+{
+  "message": "El oficio debe ser dirigido a la Gerencia de Operaciones y mencionar que necesitamos 5 laptops",
+  "session_id": "{{conversationTest.response.body.session_id}}"
+}
+
+###############################################################################
+# PERFORMANCE METRICS - Compare SWITCH vs DIRECT workflow modes
+###############################################################################
+
+### NOTA: Para cambiar entre modos, editar WORKFLOW_MODE en .env:
+### - WORKFLOW_MODE=switch (routing condicional)
+### - WORKFLOW_MODE=direct (edges directos)
+### Reiniciar el servidor después de cambiar el modo
+
+### Métricas Test 1: Knowledge query (RAG Agent)
+### Ejecutar múltiples veces en cada modo y comparar execution_time_ms
+POST {{baseUrl}}/api/chat
+Content-Type: {{contentType}}
+
+{
+  "message": "¿Qué son los transformers en machine learning?",
+  "session_id": "{{createSession.response.body.session_id}}"
+}
+
+###
+
+### Métricas Test 2: Drafting query (Draft Agent)
+POST {{baseUrl}}/api/chat
+Content-Type: {{contentType}}
+
+{
+  "message": "Redacta un correo solicitando vacaciones",
+  "session_id": "{{createSession.response.body.session_id}}"
+}
+
+###
+
+### Métricas Test 3: General query (Mailbox Agent)
+POST {{baseUrl}}/api/chat
+Content-Type: {{contentType}}
+
+{
+  "message": "Hola, buenos días",
+  "session_id": "{{createSession.response.body.session_id}}"
+}
+
+###############################################################################
+# ADVANCED MODE TESTS - Context, Messages, and Session State
+###############################################################################
+
+### Test: Advanced mode with context overrides
+# @name advancedSession
+POST {{baseUrl}}/api/sessions
+Content-Type: {{contentType}}
+
+###
+
+### Advanced Mode - Context Overrides (Tone formal)
+### Descripción: Usar overrides para cambiar el tono a formal
+POST {{baseUrl}}/api/chat
+Content-Type: {{contentType}}
+
+{
+  "message": "Redacta un correo solicitando vacaciones",
+  "session_id": "{{advancedSession.response.body.session_id}}",
+  "context": {
+    "overrides": {
+      "tone": "formal",
+      "format": "professional"
+    }
+  }
+}
+
+###
+
+### Advanced Mode - Previous Messages Context
+### Descripción: Proporcionar contexto adicional mediante mensajes previos
+POST {{baseUrl}}/api/chat
+Content-Type: {{contentType}}
+
+{
+  "message": "Redacta el correo considerando lo anterior",
+  "session_id": "{{advancedSession.response.body.session_id}}",
+  "messages": [
+    {
+      "role": "user",
+      "content": "Mi jefe se llama Carlos Muñoz"
+    },
+    {
+      "role": "user",
+      "content": "Las vacaciones son del 20 al 30 de diciembre"
+    }
+  ]
+}
+
+###
+
+### Advanced Mode - Session State
+### Descripción: Mantener estado de sesión para conversaciones con estado
+POST {{baseUrl}}/api/chat
+Content-Type: {{contentType}}
+
+{
+  "message": "¿Puedes revisar el borrador anterior?",
+  "session_id": "{{advancedSession.response.body.session_id}}",
+  "session_state": {
+    "draft_count": 2,
+    "user_preferences": {
+      "language": "es",
+      "formality": "high"
+    },
+    "workflow_step": 3
+  }
+}
+
+###
+
+### Advanced Mode - All Parameters Combined
+### Descripción: Uso completo de todos los parámetros avanzados
+POST {{baseUrl}}/api/chat
+Content-Type: {{contentType}}
+
+{
+  "message": "Genera una versión final del documento",
+  "session_id": "{{advancedSession.response.body.session_id}}",
+  "context": {
+    "overrides": {
+      "tone": "very_formal",
+      "include_signature": true
+    }
+  },
+  "messages": [
+    {
+      "role": "assistant",
+      "content": "Estimado Carlos Muñoz, solicito vacaciones del 20 al 30 de diciembre..."
+    }
+  ],
+  "session_state": {
+    "final_version": true,
+    "reviewed": true,
+    "approval_pending": false
+  }
+}

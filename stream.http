@@ -1,0 +1,175 @@
+### Multi-Agent System - SSE Streaming Tests
+### Base URL
+@baseUrl = http://localhost:8000
+
+###############################################################################
+# Server-Sent Events (SSE) Streaming
+###############################################################################
+
+### NOTE: SSE streaming responses will show events in real-time
+### Event types: start, agent, chunk, end
+
+###############################################################################
+# 1. Create Session First
+###############################################################################
+
+### Create Session
+# @name createSession
+POST {{baseUrl}}/api/sessions
+Content-Type: application/json
+
+###############################################################################
+# 2. SSE Streaming Requests
+###############################################################################
+
+### Stream: Knowledge Query (RAG Agent)
+GET {{baseUrl}}/api/chat/stream?message=¿Cuáles son las políticas de vacaciones?&session_id={{createSession.response.body.session_id}}
+Accept: text/event-stream
+
+### Expected Events:
+# data: {"type":"start","agent":"orchestrator","intent":"processing"}
+# data: {"type":"agent","agent":"rag_agent","message":"Procesado por: rag_agent"}
+# data: {"type":"chunk","text":"L"}
+# data: {"type":"chunk","text":"a"}
+# data: {"type":"chunk","text":"s"}
+# ...
+# data: {"type":"end","message":"Las políticas...","agent":"rag_agent"}
+
+###
+
+### Stream: Drafting Request (Draft Agent)
+GET {{baseUrl}}/api/chat/stream?message=Redacta un correo solicitando vacaciones del 15 al 20 de diciembre&session_id={{createSession.response.body.session_id}}
+Accept: text/event-stream
+
+###
+
+### Stream: General Query (Mailbox Agent)
+GET {{baseUrl}}/api/chat/stream?message=Hola, ¿cómo estás?&session_id={{createSession.response.body.session_id}}
+Accept: text/event-stream
+
+###
+
+### Stream: Complex Knowledge Query
+GET {{baseUrl}}/api/chat/stream?message=Explícame el proceso completo de reembolso de gastos paso por paso&session_id={{createSession.response.body.session_id}}
+Accept: text/event-stream
+
+###
+
+### Stream: Multi-paragraph Draft
+GET {{baseUrl}}/api/chat/stream?message=Redacta un informe ejecutivo sobre los resultados del Q4 2024&session_id={{createSession.response.body.session_id}}
+Accept: text/event-stream
+
+###############################################################################
+# 3. URL Encoding Examples
+###############################################################################
+
+### Stream: Message with Special Characters
+GET {{baseUrl}}/api/chat/stream?message=¿Qué%20dice%20el%20manual%20sobre%20%22seguridad%22%3F&session_id={{createSession.response.body.session_id}}
+Accept: text/event-stream
+
+###
+
+### Stream: Long Message
+GET {{baseUrl}}/api/chat/stream?message=Necesito que me ayudes a redactar un correo formal dirigido a mi supervisor solicitando una extensión de plazo para el proyecto actual debido a circunstancias imprevistas&session_id={{createSession.response.body.session_id}}
+Accept: text/event-stream
+
+###############################################################################
+# 4. Intent Classification Tests
+###############################################################################
+
+### Stream: Clear Knowledge Intent
+GET {{baseUrl}}/api/chat/stream?message=Busca información sobre políticas de trabajo remoto&session_id={{createSession.response.body.session_id}}
+Accept: text/event-stream
+
+###
+
+### Stream: Clear Drafting Intent
+GET {{baseUrl}}/api/chat/stream?message=Escribe un email de agradecimiento al equipo&session_id={{createSession.response.body.session_id}}
+Accept: text/event-stream
+
+###
+
+### Stream: Clear General Intent
+GET {{baseUrl}}/api/chat/stream?message=Buenos días&session_id={{createSession.response.body.session_id}}
+Accept: text/event-stream
+
+###############################################################################
+# 5. Conversation Context Tests
+###############################################################################
+
+### Stream: First Turn
+GET {{baseUrl}}/api/chat/stream?message=¿Cuál es el proceso de contratación?&session_id={{createSession.response.body.session_id}}
+Accept: text/event-stream
+
+###
+
+### Stream: Follow-up (expects context)
+GET {{baseUrl}}/api/chat/stream?message=¿Y cuánto tiempo toma?&session_id={{createSession.response.body.session_id}}
+Accept: text/event-stream
+
+###
+
+### Stream: Context Switch
+GET {{baseUrl}}/api/chat/stream?message=Ahora redacta un email sobre esto&session_id={{createSession.response.body.session_id}}
+Accept: text/event-stream
+
+###############################################################################
+# 6. Edge Cases
+###############################################################################
+
+### Stream: Very Short Message
+GET {{baseUrl}}/api/chat/stream?message=Hola&session_id={{createSession.response.body.session_id}}
+Accept: text/event-stream
+
+###
+
+### Stream: Question Mark Only
+GET {{baseUrl}}/api/chat/stream?message=?&session_id={{createSession.response.body.session_id}}
+Accept: text/event-stream
+
+###
+
+### Stream: Emoji Message
+GET {{baseUrl}}/api/chat/stream?message=👋 Hola&session_id={{createSession.response.body.session_id}}
+Accept: text/event-stream
+
+###############################################################################
+# 7. Performance Tests
+###############################################################################
+
+### Stream: Simple Query (baseline)
+GET {{baseUrl}}/api/chat/stream?message=Hola&session_id={{createSession.response.body.session_id}}
+Accept: text/event-stream
+
+###
+
+### Stream: Medium Complexity
+GET {{baseUrl}}/api/chat/stream?message=Redacta un correo de 3 párrafos sobre el proyecto&session_id={{createSession.response.body.session_id}}
+Accept: text/event-stream
+
+###
+
+### Stream: High Complexity
+GET {{baseUrl}}/api/chat/stream?message=Redacta un informe detallado de 5 secciones sobre resultados anuales con introducción, análisis, métricas, conclusiones y recomendaciones&session_id={{createSession.response.body.session_id}}
+Accept: text/event-stream
+
+###############################################################################
+# NOTES
+###############################################################################
+
+# SSE Event Format:
+# - Each event starts with "data: " followed by JSON
+# - Events are separated by double newlines
+# - Connection stays open until "end" event
+#
+# Event Types:
+# 1. start   - Stream begins, includes agent and intent
+# 2. agent   - Agent identification message
+# 3. chunk   - Single character or text chunk
+# 4. end     - Stream complete, includes final message and agent
+#
+# Tips for Testing:
+# - Use REST Client extension in VS Code
+# - Use IntelliJ HTTP Client
+# - Or use curl: curl -N "{{baseUrl}}/api/chat/stream?message=test&session_id=xxx"
+# - Watch for progressive text rendering
