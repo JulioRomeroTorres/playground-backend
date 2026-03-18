@@ -1,7 +1,7 @@
 import logging
 from fastapi import APIRouter
 from starlette.responses import JSONResponse
-from app.config import get_settings
+from fastapi.responses import StreamingResponse
 
 from app.presentation.api.dependencies import (
     get_handle_message_use_case,
@@ -77,7 +77,11 @@ async def chat_stream_agent(session_id: str, request: ConversationRequest):
         except Exception as e:
             raise e
 
-    pass
+    return StreamingResponse(
+        generate(),
+        media_type="text/event-stream",
+        headers=STREAMING_HEADERS
+    )
 
 @router.post("/question/")
 async def question_agent(request: ConversationRequest):
