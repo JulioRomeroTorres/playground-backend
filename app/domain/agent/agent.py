@@ -8,7 +8,10 @@ from app.domain.agent.tools import (
     CompletedToolInformation
 ) 
 
-from app.domain.utils import get_current_datetime
+from app.domain.utils import (
+    format_datetime_to_str,
+    get_current_datetime
+) 
 
 class AgentResponse(BaseModel):
     message: str = Field(description="Response message text")
@@ -47,13 +50,17 @@ class SimplifyAgentInformation(BaseModel):
     version: str
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
+    model: str
+    description: str
 
     def format_json(self):
         return {
             "name": self.name,
             "version": self.version,
-            "created_at": None if self.created_at is None else self.created_at.strftime("%d/%m/%Y %H:%M"),
-            "updated_at": None if self.updated_at is None else self.updated_at.strftime("%d/%m/%Y %H:%M"),
+            "created_at": format_datetime_to_str(self.created_at),
+            "updated_at": format_datetime_to_str(self.updated_at), 
+            "model": self.model,
+            "description": self.description,
             "agent_id": self.agent_id
         }
 

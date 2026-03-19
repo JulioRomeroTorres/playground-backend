@@ -40,6 +40,7 @@ class HandleAgentsUseCase:
     
     async def get_agent_version(self, agent_name: str) -> List[SimplifyAgentInformation]:
         selected_agents = await self.agent_information_manager.get_agent_versions(agent_name)
+        print("jajaja", selected_agents)
         return [ SimplifyAgentInformation(**agent)  for agent in selected_agents  ]      
 
          

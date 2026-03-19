@@ -7,7 +7,7 @@ from typing import Any, Dict, List, Optional, Union, Tuple
 from uuid import uuid4, UUID
 from datetime import datetime, timezone
 from urllib.parse import urlparse
-from app.domain.contants import MEDIA_FILE_MAPPER
+from app.domain.contants import MEDIA_FILE_MAPPER, DEFAULT_DT_FORMAT
 from concurrent.futures import ProcessPoolExecutor, as_completed
 from tqdm import tqdm 
 from agent_framework import DataContent
@@ -39,6 +39,11 @@ def get_or_create_uuid(session_id: Optional[Union[UUID, str]] =  None) -> UUID:
     
 def get_current_datetime() -> str:
     return datetime.now().isoformat()
+
+def format_datetime_to_str(current_datetime: Optional[datetime] = None, format: Optional[str] = DEFAULT_DT_FORMAT):
+    if current_datetime is None:
+        return current_datetime
+    return current_datetime.strftime(format)
 
 def get_datetime_now() -> datetime:
     return datetime.now(timezone.utc)

@@ -39,3 +39,5 @@ class LlmProviderEnum(Enum):
     OPEN_AI = "Open Ai"
     ANTHROPIC = "GANTHROPICP"
     DEEP_SEEK = "GDEEP_SEEKP"
+
+DEFAULT_DT_FORMAT = "%d/%m/%Y %H:%M"

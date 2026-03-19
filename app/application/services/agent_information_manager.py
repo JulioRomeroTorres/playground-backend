@@ -11,7 +11,7 @@ class AgentInformationManager:
         await self.db_repository.insert_item(agent_information, collection_name)
         agent = await self.db_repository.get_items_by_filter(
             filter={'agent_id': agent_information.get("agent_id")},
-            projection={"name": 1, "created_at": 1, "version": 1, "agent_id": 1}, 
+            projection={"name": 1, "model": 1, "created_at": 1, "version": 1, "agent_id": 1}, 
             collection_name=collection_name,
             length=1
         )
@@ -32,13 +32,13 @@ class AgentInformationManager:
     async def get_agents_by_user(self, user_id: str):
         return await self.db_repository.get_items_by_filter(
             filter={"created_by": user_id},
-             projection={"name": 1, "description": 1, "agent_id": 1, "version": 1, "created_at": 1},
+             projection={"name": 1, "description": 1,"model": 1, "agent_id": 1, "version": 1, "created_at": 1},
              collection_name="agents_information")
     
     async def get_agent_versions(self, agent_name): 
         return await self.db_repository.get_items_by_filter(
             filter={"name": agent_name},
-             projection={"name": 1, "description": 1, "agent_id": 1, "version": 1, "created_at": 1},
+             projection={"name": 1, "model": 1, "description": 1, "agent_id": 1, "version": 1, "created_at": 1},
              collection_name="agents_information")
 
     async def get_specific_agent_by_user(self, agent_id: str):
