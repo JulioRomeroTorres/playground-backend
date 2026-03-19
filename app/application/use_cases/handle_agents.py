@@ -38,5 +38,8 @@ class HandleAgentsUseCase:
         selected_agent = await self.agent_information_manager.get_specific_agent_by_user(agent_id)
         return CompletedAgentInformation(**selected_agent)
     
+    async def get_agent_version(self, agent_name: str) -> List[SimplifyAgentInformation]:
+        selected_agents = await self.agent_information_manager.get_agent_versions(agent_name)
+        return [ SimplifyAgentInformation(**agent)  for agent in selected_agents  ]      
 
          

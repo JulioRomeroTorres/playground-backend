@@ -37,7 +37,7 @@ class SimplifyToolInformation(BaseModel):
         return {
             "name": self.name,
             "description": self.description,
-            "create_at": self.created_at.strftime("%d/%m/%Y %H:%M"),
+            "created_at": self.created_at.strftime("%d/%m/%Y %H:%M"),
             "updated_at": None if self.updated_at is None else self.updated_at.strftime("%d/%m/%Y %H:%M"),
             "tool_id": self.tool_id
         }

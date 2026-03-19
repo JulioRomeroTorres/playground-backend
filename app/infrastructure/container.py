@@ -113,6 +113,7 @@ class DependencyContainer:
 
     def get_handle_message_use_case(self) -> HandleMessageUseCase:
         return HandleMessageUseCase(
+            agent_information_manager=self.get("agent_information_manager"),
             agent_core=self.get("agent_core")
         )
 
@@ -124,7 +125,6 @@ class DependencyContainer:
 
     def get_handle_threads_use_case(self) -> HandleThreadsUseCase:
           return HandleThreadsUseCase(
-            agent_information_manager=self.get("agent_information_manager"),
             thread_manager=self.get("thread_manager")
         )
 

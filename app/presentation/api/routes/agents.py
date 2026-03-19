@@ -31,10 +31,17 @@ STREAMING_HEADERS = {
     "Transfer-Encoding": "chunked"
 }
 
+@router.get("/")
+async def get_agent_version(agent_name: str):
+    handle_get_agents = get_handle_agents_use_case()
+    agent_versions = await handle_get_agents.get_agent_version(agent_name)
+    formatted_agents = [ agent_version.format_json() for agent_version in agent_versions ]
+    return JSONResponse(formatted_agents, headers={"status_code": "200"})
+
 @router.post("/users/{user_id}/")
 async def create_agent(user_id: str, agent_information_request: AgentInformationRequest):
-    handle_get_tools = get_handle_agents_use_case()
-    created_agent = await handle_get_tools.create_agent(user_id, agent_information_request)
+    handle_get_agents = get_handle_agents_use_case()
+    created_agent = await handle_get_agents.create_agent(user_id, agent_information_request)
 
     return JSONResponse(created_agent.format_json(), headers={"status_code": "200"})
 

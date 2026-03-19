@@ -1,7 +1,10 @@
 from typing import List, Any
 from app.application.services.agent_information_manager import AgentInformationManager
 from app.domain.utils import generate_uuid, get_datetime_now
-from app.domain.agent.tools import SimplifyToolInformation
+from app.domain.agent.tools import (
+    SimplifyToolInformation,
+    CompletedToolInformation
+)
 
 class HandleToolsUseCase:
     def __init__(self, tool_manager: AgentInformationManager):
@@ -24,10 +27,10 @@ class HandleToolsUseCase:
 
         return SimplifyToolInformation(**created_register[0])
 
-    async def get_tools_by_user(self, tool_id: str) -> List[Any]:
+    async def get_tools_by_user(self, tool_id: str) -> List[SimplifyToolInformation]:
         selected_tools = await self.tool_manager.get_tools_by_user(tool_id)
         return [ SimplifyToolInformation(**tool)  for tool in selected_tools ]
 
-    async def get_tool_by_user(self, tool_id: str) -> Any:
+    async def get_tool_by_user(self, tool_id: str) -> CompletedToolInformation:
         selected_tool = await self.tool_manager.get_specific_tool_by_user(tool_id)
-        return 
+        return CompletedToolInformation(**selected_tool)

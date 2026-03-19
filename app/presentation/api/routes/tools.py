@@ -30,15 +30,15 @@ async def create_tool(user_id: str, tool_information_request: ToolInformationReq
     return JSONResponse(tools_by_user.format_json(), headers={"status_code": "200"})
 
 @router.get("/users/{user_id}/")
-async def get_agents_by_user_id(user_id: str):
+async def get_tools_by_user_id(user_id: str):
     handle_get_tools = get_handle_tools_use_case()
-    tools_by_user = await handle_get_tools.get_tool_by_user(user_id)
+    tools_by_user = await handle_get_tools.get_tools_by_user(user_id)
+    formatted_information = [ tool.format_json() for tool in tools_by_user ]
+    return JSONResponse(formatted_information, headers={"status_code": "200"})
 
-    return JSONResponse(tools_by_user.model_dump(), headers={"status_code": "200"})
-
-@router.get("/{tool_id}/users/{user_id}/")
-async def get_specific_agent_by_user_id(tool_id: str, user_id: str):
+@router.get("/{tool_id}/")
+async def get_tool_agent_by_user_id(tool_id: str):
     handle_get_tools = get_handle_tools_use_case()
-    specific_tool = await handle_get_tools.get_tool_by_user(user_id, tool_id)
+    specific_tool = await handle_get_tools.get_tool_by_user(tool_id)
 
-    return JSONResponse(specific_tool.model_dump(), headers={"status_code": "200"})
+    return JSONResponse(specific_tool.format_json(), headers={"status_code": "200"})

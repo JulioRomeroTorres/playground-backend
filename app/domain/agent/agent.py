@@ -49,7 +49,7 @@ class SimplifyAgentInformation(BaseModel):
         return {
             "name": self.name,
             "version": self.version,
-            "create_at": None if self.created_at is None else self.created_at.strftime("%d/%m/%Y %H:%M"),
+            "created_at": None if self.created_at is None else self.created_at.strftime("%d/%m/%Y %H:%M"),
             "updated_at": None if self.updated_at is None else self.updated_at.strftime("%d/%m/%Y %H:%M"),
             "agent_id": self.agent_id
         }
@@ -72,4 +72,4 @@ class AgentSettings(BaseModel):
     version: str
     system_instruction: str
     model: str
-    tools_information: List[CompletedToolInformation]
+    tools: List[CompletedToolInformation]

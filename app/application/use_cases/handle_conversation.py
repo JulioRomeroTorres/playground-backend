@@ -29,8 +29,9 @@ class MessageUseCase:
         self.agent_information_manager = agent_information_manager
         pass
 
-    async def create_thread(self, conversation_id: str) -> None:
-        raw_agent_settings = await self.agent_information_manager.get_specific_agent_by_user()
+    async def create_thread(self, agent_id: str, conversation_id: str) -> None:
+        raw_agent_settings = await self.agent_information_manager.get_specific_agent_by_user(agent_id)
+        print("Rawww Information", raw_agent_settings)
         agent_settings = AgentSettings(**raw_agent_settings)
         self.agent_core.create_agent(conversation_id, agent_settings)
     
@@ -51,7 +52,7 @@ class HandleMessageUseCase(MessageUseCase):
         decision: Optional[str] = None,
     ) -> AgentResponse:
 
-        await self.create_thread(conversation_id)
+        await self.create_thread(agent_id, conversation_id)
 
         agent_response = await self.agent_core.generate_content(
             message=message,
@@ -86,7 +87,7 @@ class HandleMessageStreamUseCase(MessageUseCase):
         decision: Optional[str] = None
     ) -> AsyncGenerator[dict[str, Any], None]:
         
-        await self.create_thread(conversation_id)
+        await self.create_thread(agent_id, conversation_id)
 
         yield StartStreamingResponse(agent=self.agent_core.agent_name).model_dump()
 
