@@ -8,13 +8,16 @@ from app.domain.agent.tools import (
     CompletedToolInformation
 ) 
 
+from app.domain.utils import get_current_datetime
+
 class AgentResponse(BaseModel):
     message: str = Field(description="Response message text")
     agent_name: str = Field(description="Name of the agent that generated the response")
     intent: str | None = Field(default=None, description="Classified intent")
     confidence: float | None = Field(default=None, description="Confidence score")
-    timestamp: datetime = Field(default_factory=datetime.utcnow)
+    timestamp: str = Field(default= f"{get_current_datetime()}")
     metadata: dict[str, Any] = Field(default_factory=dict)
+    model_name: Optional[str] = Field(default="")
 
 class ApiExternalAgentMetadata(BaseModel):
     conversation_id: str 

@@ -46,7 +46,7 @@ class AgentTrace(BaseModel):
 
 class AgentInformationRequest(BaseModel):
     name: str = Field(decription="Agent Name")
-    model_version: Optional[str] = Field(decription="Model Name", default="gpt-4o-mini") 
+    model: Optional[str] = Field(decription="Model Name", default="gpt-4o-mini") 
     system_instruction: Optional[str] = Field(description="Prompt Agent", default="")
     description: Optional[str] = Field(description="Agent Description", default="")
     version: Optional[str] = Field(description="Agent Version", default="v1")

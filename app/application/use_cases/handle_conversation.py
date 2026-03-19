@@ -27,12 +27,15 @@ class MessageUseCase:
         ):
         self.agent_core = agent_core
         self.agent_information_manager = agent_information_manager
+        self.agent_name = None
+        self.model = None
         pass
 
     async def create_thread(self, agent_id: str, conversation_id: str) -> None:
         raw_agent_settings = await self.agent_information_manager.get_specific_agent_by_user(agent_id)
-        print("Rawww Information", raw_agent_settings)
         agent_settings = AgentSettings(**raw_agent_settings)
+        self.agent_name = agent_settings.name
+        self.model = agent_settings.model
         self.agent_core.create_agent(conversation_id, agent_settings)
     
 class HandleMessageUseCase(MessageUseCase):
@@ -56,13 +59,13 @@ class HandleMessageUseCase(MessageUseCase):
 
         agent_response = await self.agent_core.generate_content(
             message=message,
-            additional_files=additional_files,
-            agent_id=agent_id
+            additional_files=additional_files
             )
 
         return AgentResponse(
             message=agent_response.messages[-1].text,
-            agent_name=self.agent_manager.agent_name,
+            agent_name=self.agent_name,
+            model_name=self.model,
             metadata={
                 "conversation_id": conversation_id,
                 "usage_tokens": 100,
@@ -89,7 +92,7 @@ class HandleMessageStreamUseCase(MessageUseCase):
         
         await self.create_thread(agent_id, conversation_id)
 
-        yield StartStreamingResponse(agent=self.agent_core.agent_name).model_dump()
+        yield StartStreamingResponse(agent=self.agent_name).model_dump()
 
         async for chunk in self.agent_core.generate_stream_content(
             message=message,

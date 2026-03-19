@@ -72,9 +72,11 @@ async def chat_agent(agent_id: str, conversation_id: str, request: ConversationR
         agent_id=agent_id
     )
 
+    print("VAAAAAA", response)
+
     chat_response = ConversationResponse(
         content=response.message,
-        metadata={**response.metadata, "model_name": response.model_name},
+        metadata={**response.metadata, "model_name": response},
     )
 
     return JSONResponse(chat_response.model_dump(), headers={"status_code": "200"})

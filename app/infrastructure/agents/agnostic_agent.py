@@ -38,7 +38,8 @@ class AgnosticAgent(BaseAgentFactory):
             })
             tool = DynamicToolFactory.create_tool(tool_setting)
             tools.append(tool)
-        return tools
+        
+        return None if len(tools) < 1 else tools
     
     def get_middleware(self) -> Optional[List[Middleware]]:
         return None
@@ -46,16 +47,16 @@ class AgnosticAgent(BaseAgentFactory):
     def __init__(self, conversation_id: str, agent_metadata: AgentSettings, db_client: Any = None):
         
         settings = get_settings()
-
+        print("Agent Metadata", agent_metadata)
         self.agent_name = agent_metadata.name
         self.agent_version = agent_metadata.version
 
         self.system_instructions = agent_metadata.system_instruction
         
-        model_name = AgentSettings.model
+        model_name = agent_metadata.model
         model_version= MAPPER_VERSION[model_name]
 
-        self.tools_information = AgentSettings.tools_information
+        self.tools_information = agent_metadata.tools
 
         self.llm_settings = LlmSettings(
             version=model_version,
