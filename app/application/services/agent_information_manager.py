@@ -11,7 +11,7 @@ class AgentInformationManager:
         await self.db_repository.insert_item(agent_information, collection_name)
         agent = await self.db_repository.get_items_by_filter(
             filter={'agent_id': agent_information.get("agent_id")},
-            projection={"name": 1, "model": 1, "created_at": 1, "version": 1, "agent_id": 1}, 
+            projection={"name": 1, "model": 1, "description": 1 , "created_at": 1, "version": 1, "agent_id": 1}, 
             collection_name=collection_name,
             length=1
         )
