@@ -66,13 +66,13 @@ class SimplifyAgentInformation(BaseModel):
 
 class CompletedAgentInformation(SimplifyAgentInformation):
     tools: Optional[List[SimplifyToolInformation]] = []
-    prompt: Optional[str] = ""
+    system_instruction: Optional[str] = ""
     enable_memory: Optional[bool] = False
     
     def format_json(self):
         return {
             **super().format_json(),
-            "prompt": self.prompt,
+            "system_instruction": self.system_instruction,
             "enable_memory": self.enable_memory,
             "tools": [ tool.format_json() for tool in self.tools ]
         }
