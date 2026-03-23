@@ -54,8 +54,9 @@ class AgentInformationRequest(BaseModel):
     enable_memory: Optional[bool] = Field(description="Enable Long Memory", default= False)
 
 class ToolInformationRequest(BaseModel):
-    name: str = Field(decription="Agent Name")
-    description: str = Field(description="Agent Description")
+    name: str = Field(decription="Tool Name")
+    alias: str = Field(decription="Tool Name")
+    description: str = Field(description="Tool Description")
     input_params: Optional[Dict[str, Any]] = Field(description="Input Params", default=None)
     logic_content: str = Field(description="Logic content of tool")
 

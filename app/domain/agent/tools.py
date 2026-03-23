@@ -28,6 +28,7 @@ class ToolSettings(BaseModel):
 
 class SimplifyToolInformation(BaseModel):
     name: str 
+    alias: str
     tool_id: str
     description: Optional[str] = ""
     created_at: datetime
@@ -36,6 +37,7 @@ class SimplifyToolInformation(BaseModel):
     def format_json(self):
         return {
             "name": self.name,
+            "alias": self.alias,
             "description": self.description,
             "created_at": self.created_at.strftime("%d/%m/%Y %H:%M"),
             "updated_at": None if self.updated_at is None else self.updated_at.strftime("%d/%m/%Y %H:%M"),
@@ -43,12 +45,12 @@ class SimplifyToolInformation(BaseModel):
         }
 
 class CompletedToolInformation(SimplifyToolInformation):
-    code: Optional[str] = ""
+    logic_content: Optional[str] = ""
     input_params: Optional[Dict[str, Any]] = None 
 
     def format_json(self):
         return {
             **super().format_json(),
-            "code": self.code,
+            "code": self.logic_content,
             "input_params": self.input_params,
         }

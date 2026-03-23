@@ -33,8 +33,8 @@ class AgnosticAgent(BaseAgentFactory):
             tool_setting = ToolSettings(**{
                 "name": tool_info.name,
                 "description": tool_info.description,
-                "logical_content": tool_info.logical_content,
-                "input_parameters": tool_info.input_parameters
+                "logical_content": tool_info.logic_content,
+                "input_parameters": tool_info.input_params
             })
             tool = DynamicToolFactory.create_tool(tool_setting)
             tools.append(tool)
