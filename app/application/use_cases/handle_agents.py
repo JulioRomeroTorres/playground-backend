@@ -1,6 +1,6 @@
-from typing import List, Any
+from typing import List, Any, Dict
 from app.application.services.agent_information_manager import AgentInformationManager
-from app.domain.utils import generate_uuid, get_datetime_now
+from app.domain.utils import generate_uuid, get_datetime_now, grouped_by_key
 from app.domain.agent.agent import (
     SimplifyAgentInformation,
     CompletedAgentInformation
@@ -11,6 +11,19 @@ class HandleAgentsUseCase:
     def __init__(self, agent_information_manager: AgentInformationManager):
         self.agent_information_manager = agent_information_manager
         pass
+    
+    def format_groupped_agents(self, groupped_agents: Dict[str, List[Any]]) -> Dict[str, Any]:
+        formatted_information = []
+
+        for agent_name in groupped_agents.keys():
+            formatted_information.append(
+                {
+                    "name": agent_name,
+                    "versions": groupped_agents[agent_name],
+                    "latest_version": groupped_agents[agent_name][-1]["version"]
+                }
+            )
+        return formatted_information
 
     async def create_agent(self, user_id: str, agent_information: Any) -> SimplifyAgentInformation:
         all_agent_information = {
@@ -29,10 +42,11 @@ class HandleAgentsUseCase:
 
         return SimplifyAgentInformation(**created_register[0])
         
-    async def get_agents_by_user(self, user_id: str) -> List[CompletedAgentInformation]:
+    async def get_agents_by_user(self, user_id: str) -> List[SimplifyAgentInformation]:
         all_agents = await self.agent_information_manager.get_agents_by_user(user_id)
-        print("all_agents===", all_agents)
-        return [ SimplifyAgentInformation(**agent)  for agent in all_agents  ]        
+        all_agents = [ SimplifyAgentInformation(**agent).format_json()  for agent in all_agents  ]
+        groupped_agents = grouped_by_key(all_agents, "name", "created_at")    
+        return self.format_groupped_agents(groupped_agents)      
 
     async def get_agent_by_user(self, agent_id: str) -> CompletedAgentInformation:
         selected_agent = await self.agent_information_manager.get_specific_agent_by_user(agent_id)
@@ -40,7 +54,6 @@ class HandleAgentsUseCase:
     
     async def get_agent_version(self, agent_name: str) -> List[SimplifyAgentInformation]:
         selected_agents = await self.agent_information_manager.get_agent_versions(agent_name)
-        print("jajaja", selected_agents)
         return [ SimplifyAgentInformation(**agent)  for agent in selected_agents  ]      
 
          

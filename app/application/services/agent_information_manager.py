@@ -64,7 +64,7 @@ class AgentInformationManager:
     async def get_tools_by_user(self, user_id: str):
         return await self.db_repository.get_items_by_filter(
             filter={"created_by": user_id},
-            projection={"name": 1, "description": 1, "created_at": 1, "tool_id": 1},
+            projection={"name": 1, "description": 1, "created_at": 1, "tool_id": 1, "alias": 1},
             collection_name="tools_information"
         )
 

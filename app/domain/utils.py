@@ -3,6 +3,7 @@ import logging
 import fitz
 from PIL import Image
 import io
+from collections import defaultdict
 from typing import Any, Dict, List, Optional, Union, Tuple
 from uuid import uuid4, UUID
 from datetime import datetime, timezone
@@ -171,3 +172,17 @@ def url_to_data_content(url: str, media_type: str) -> Any:
     
     return DataContent(uri=data_uri)
     
+def grouped_by_key(information_list: List[Dict[str, Any]], 
+                   groupped_key_name: str, order_key_name: Optional[str] = None) -> Dict[str, List[Any]]: 
+
+    sorted_list = information_list if order_key_name is None else \
+                    sorted(information_list, key=lambda x: x[order_key_name])
+    
+    groups = defaultdict(list)
+
+    for element in sorted_list:
+        if element[groupped_key_name] not in groups:
+            groups[element[groupped_key_name]] = []
+        groups[element[groupped_key_name]].append(element)
+
+    return groups

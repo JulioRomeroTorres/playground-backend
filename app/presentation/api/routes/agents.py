@@ -49,8 +49,7 @@ async def create_agent(user_id: str, agent_information_request: AgentInformation
 async def get_agents_by_user_id(user_id: str):
     handle_get_agents = get_handle_agents_use_case()
     agents_by_user = await handle_get_agents.get_agents_by_user(user_id)
-    formatted_agents = [ agent.format_json() for agent in  agents_by_user ]
-    return JSONResponse(formatted_agents, headers={"status_code": "200"})
+    return JSONResponse(agents_by_user, headers={"status_code": "200"})
 
 @router.get("/{agent_id}/")
 async def get_specific_agent_by_user_id(agent_id: str):
