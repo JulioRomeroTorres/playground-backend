@@ -14,12 +14,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 RUN python -m venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
 
-COPY requirements.txt pyproject.toml ./
+COPY pyproject.toml ./
 COPY app ./app
 
 RUN --mount=type=cache,target=/root/.cache/pip \
     pip install -U pip \
-    && pip install -r requirements.txt \
     && pip install .
 
 # -------------------- runtime --------------------

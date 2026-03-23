@@ -23,7 +23,7 @@ class AgentInformationManager:
         await self.db_repository.insert_item(tool_information, collection_name)
         tool = await self.db_repository.get_items_by_filter(
             filter={'tool_id': tool_information.get("tool_id")},
-            projection={"name": 1, "created_at": 1, "created_by": 1, "tool_id": 1}, 
+            projection={"name": 1, "created_at": 1, "created_by": 1, "tool_id": 1, "alias": 1}, 
             collection_name=collection_name,
             length=1
         )
