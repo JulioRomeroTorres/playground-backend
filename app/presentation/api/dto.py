@@ -76,8 +76,9 @@ class AgenticNode(BaseModel):
 
 class WorkflowInformationRequest(BaseModel):
     name: str
-    description: Optional[str] = Field(description="Workflow description")
-    start_node: Optional[str] = Field(decription="Start Workflow Node")
+    unique_agents_ids: Optional[List[str]] = Field(description="Workflow description", default=[])
+    description: Optional[str] = Field(description="Workflow description", default=None)
+    start_node: Optional[str] = Field(decription="Start Workflow Node", default=None)
     execution_config: Optional[WorkflowExecutionConfig] = Field(decription="Workflow Settings", default=WorkflowExecutionConfig()) 
     nodes: Optional[List[AgenticNode]] = Field(description="Prompt Agent", default=[])
     edges: Optional[List[AgenticEdge]] = Field(description="Prompt Agent", default=[])
