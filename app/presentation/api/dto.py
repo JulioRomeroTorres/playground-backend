@@ -73,6 +73,7 @@ class WorkflowInformationRequest(BaseModel):
     execution_config: Optional[WorkflowExecutionConfig] = Field(decription="Workflow Settings", default=WorkflowExecutionConfig()) 
     nodes: Optional[List[AgenticNode]] = Field(description="Prompt Agent", default=[])
     edges: Optional[List[AgenticEdge]] = Field(description="Prompt Agent", default=[])
+    is_free_graph: Optional[bool] = Field(description="Is Free Graph", default=True)
     
 class PrimitiveConversationInformation(BaseModel):
     message: str = Field(description="Current user message")
