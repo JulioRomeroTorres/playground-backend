@@ -1,5 +1,6 @@
 from app.application.use_cases.handle_conversation import (
-    HandleMessageUseCase, HandleMessageStreamUseCase, HandleThreadsUseCase
+    HandleMessageUseCase, HandleMessageStreamUseCase, 
+    HandleThreadsUseCase, HandleWorkflowMessageUseCase
 )
 from app.application.use_cases.handle_document import (
     HandleDocumentsUseCase
@@ -11,6 +12,10 @@ from app.application.use_cases.handle_agents import (
 
 from app.application.use_cases.handle_tools import (
     HandleToolsUseCase
+)
+
+from app.application.use_cases.handle_workflows import (
+    HandleWorkflowsUseCase
 )
 
 from app.infrastructure.container import get_container
@@ -32,3 +37,9 @@ def get_handle_agents_use_case() -> HandleAgentsUseCase:
 
 def get_handle_tools_use_case() -> HandleToolsUseCase:
     return get_container().get_handle_tools_use_case()
+
+def get_handle_workflows_use_case() -> HandleWorkflowsUseCase:
+    return get_container().get_handle_workflows_use_case()
+
+def get_handle_workflows_message_use_case() -> HandleWorkflowMessageUseCase:
+    return get_container().get_handle_workflows_message_use_case()

@@ -8,7 +8,7 @@ from app.application.services.document_manager import DocumentManager
 
 from app.application.use_cases.handle_conversation import (
     HandleMessageUseCase, HandleMessageStreamUseCase, 
-    HandleThreadsUseCase
+    HandleThreadsUseCase, HandleWorkflowMessageUseCase
 )
 
 from app.application.use_cases.handle_document import (
@@ -23,8 +23,13 @@ from app.application.use_cases.handle_tools import (
     HandleToolsUseCase
 )
 
+from app.application.use_cases.handle_workflows import (
+    HandleWorkflowsUseCase
+)
+
 from app.infrastructure.client_factory import ChatClientFactory
 from app.infrastructure.orchestrator import WorkflowOrchestrator
+
 
 from app.infrastructure.repository.mongo_db import MongoDbRepository
 from app.infrastructure.repository.thread_manager import ThreadManagerRepository
@@ -92,13 +97,9 @@ class DependencyContainer:
             )
 
         self._factories["agent_core"] = lambda: AgentCore(self._get_db_client(), self.get('content_safety_repository'))
-
-        # Orchestrator (depends on chat_client and conversation_manager)
-        self._factories["orchestrator"] = lambda: WorkflowOrchestrator(
-            self.get("conversation_manager"),
-            self._get_db_client()
-        )
-
+        self._factories["workflow_orchestrator"] = lambda: WorkflowOrchestrator(
+                                                                self._get_db_client()
+                                                            )
         self._initialized = True
 
     def get(self, service_name: str) -> Any:
@@ -141,6 +142,17 @@ class DependencyContainer:
     def get_handle_tools_use_case(self) -> HandleToolsUseCase:
         return HandleToolsUseCase(
             tool_manager=self.get("tool_manager")
+        )
+
+    def get_handle_workflows_use_case(self) -> HandleWorkflowsUseCase:
+        return HandleWorkflowsUseCase(
+            workflow_information_manager=self.get("agent_information_manager")
+        )
+
+    def get_handle_workflows_message_use_case(self) -> HandleWorkflowMessageUseCase:
+        return HandleWorkflowMessageUseCase(
+            workflow_information_manager=self.get("agent_information_manager"),
+            workflow_orchestrator=self.get("workflow_orchestrator")   
         )
 
     def clear(self):

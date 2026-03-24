@@ -60,6 +60,28 @@ class ToolInformationRequest(BaseModel):
     input_params: Optional[Dict[str, Any]] = Field(description="Input Params", default=None)
     logic_content: str = Field(description="Logic content of tool")
 
+class WorkflowExecutionConfig(BaseModel):
+    max_iterations: Optional[int] = 20
+    checkpoint_enabled: Optional[bool] = False
+
+class AgenticEdge(BaseModel):
+    source: str
+    target: str
+
+class AgenticNode(BaseModel):
+    id: str
+    type: str
+    sub_type: Optional[str] = None
+    sub_agents: Optional[List[str]] = None
+
+class WorkflowInformationRequest(BaseModel):
+    name: str
+    description: Optional[str] = Field(description="Workflow description")
+    start_node: Optional[str] = Field(decription="Start Workflow Node")
+    execution_config: Optional[WorkflowExecutionConfig] = Field(decription="Workflow Settings", default=WorkflowExecutionConfig()) 
+    nodes: Optional[List[AgenticNode]] = Field(description="Prompt Agent", default=[])
+    edges: Optional[List[AgenticEdge]] = Field(description="Prompt Agent", default=[])
+    
 class PrimitiveConversationInformation(BaseModel):
     message: str = Field(description="Current user message")
     additional_files: Optional[List[str]] = Field(

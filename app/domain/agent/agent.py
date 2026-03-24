@@ -78,8 +78,25 @@ class CompletedAgentInformation(SimplifyAgentInformation):
         }
 
 class AgentSettings(BaseModel):
+    id: Optional[str] = ""
     name: str
     version: str
     system_instruction: str
     model: str
     tools: List[CompletedToolInformation]
+    description: Optional[str] = ""    
+
+class WorkflowSettings(BaseModel):
+    id: Optional[str] = ""
+    type: str
+    sub_type: str
+    sub_agents: List[str]
+      
+class IntentClassification(BaseModel):
+    intent: str = Field(
+        description="Tipo de intención clasificada"
+    )
+    reasoning: str = Field(
+        default="",
+        description="Razonamiento de la clasificación"
+    )

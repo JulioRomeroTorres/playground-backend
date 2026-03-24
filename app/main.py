@@ -19,7 +19,7 @@ from app.domain.exceptions import DomainException
 from pydantic import ValidationError
 from app.presentation.exception_handlers import api_exception_handler, domain_exception_handler, generic_exception_handler
 from app.presentation.exception_handlers import request_validation_exception_handler, validation_exception_handler
-from app.presentation.api.routes import checks, agents, tools, documents
+from app.presentation.api.routes import checks, agents, tools, documents, workflows
 
 def setup_logging():
     logging.basicConfig(
@@ -54,6 +54,7 @@ def create_app():
     app = FastAPI(debug=False, lifespan=lifespan)
     
     app.include_router(agents.router)
+    app.include_router(workflows.router)
     app.include_router(tools.router)
     app.include_router(documents.router)
     app.include_router(checks.router)

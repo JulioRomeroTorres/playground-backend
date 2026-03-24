@@ -1,5 +1,11 @@
 from typing import Any
 from app.domain.repository.item_sql_repository import IItemSqlRepository
+from enum import Enum
+
+class CollectionPlaygroundEnum(Enum):
+    AGENTS_INFORMATION = 'agents_information'
+    TOOLS_INFORMATION = 'tools_information'
+    WORKFLOWS_INFORMATION = 'workflows_information'
 
 class AgentInformationManager:
     def __init__(self, db_repository: IItemSqlRepository):
@@ -74,4 +80,30 @@ class AgentInformationManager:
             collection_name="tools_information"
         )
         return selected_tool[0]
+    
+    async def create_workflow(self, completed_workflow_information: Any):
+        await self.db_repository.insert_item(completed_workflow_information, CollectionPlaygroundEnum.WORKFLOWS_INFORMATION.value)
+        return completed_workflow_information
+
+    async def get_specific_workflow_information(self, workflow_id: str):
+        selected_workflow = await self.db_repository.get_items_by_filter(
+            filter={"workflow_id": workflow_id},
+            collection_name=CollectionPlaygroundEnum.WORKFLOWS_INFORMATION.value
+        )
+        return selected_workflow[0]
+    
+    async def update_workflow(self, workflow_id, updated_information: Any):
+        await self.db_repository.update_by_filter(
+            filter={"workflow_id": workflow_id},
+            updated_value=updated_information,
+            collection_name=CollectionPlaygroundEnum.WORKFLOWS_INFORMATION.value
+        )
+        return updated_information
+    
+    async def get_workflows_by_user(self, user_id: str):
+        return await self.db_repository.get_items_by_filter(
+            filter={"created_by": user_id},
+            projection={"name": 1, "description": 1, "created_at": 1, "workflow_id": 1},
+            collection_name=CollectionPlaygroundEnum.WORKFLOWS_INFORMATION.value
+        )
         

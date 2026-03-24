@@ -1,3 +1,4 @@
+import asyncio
 from typing import (
     Any, AsyncGenerator, Optional,
     List, Dict, Any
@@ -16,6 +17,8 @@ from app.domain.conversation.conversation import (
     StartStreamingResponse, DataStreamingResponse, EndStreamingResponse,
     TypeStreamingResponseEnum  
 ) 
+
+from app.domain.orchestrator.service import IWorkflowOrchestrator
 
 from app.domain.utils import generate_uuid, get_current_datetime
 
@@ -122,3 +125,42 @@ class HandleThreadsUseCase():
         filters
     ) -> None:
         return 
+
+class HandleWorkflowMessageUseCase:
+    def __init__(
+        self,
+        workflow_information_manager: AgentInformationManager,
+        workflow_orchestrator: IWorkflowOrchestrator
+    ):
+        self.workflow_information_manager = workflow_information_manager
+        self.workflow_orchestrator = workflow_orchestrator
+
+    async def execute(self, 
+        conversation_id: str,
+        message: str,
+        workflow_id: str,
+        additional_files: Optional[List[str]] = [],
+        decision: Optional[str] = None
+    ):
+        workflow_structure = await self.workflow_information_manager.get_specific_workflow_information(workflow_id)
+
+        agents_coroutine_information = [
+            self.workflow_information_manager.get_specific_agent_by_user(agent_id)
+            for agent_id in workflow_structure.unique_agents_ids
+        ]
+        
+        agents_information = await asyncio.gather(*agents_coroutine_information)
+
+        [
+            self.workflow_orchestrator.create_agent(
+                AgentSettings(
+                **agent_information
+                )
+            )
+            for agent_information in  agents_information
+        ]
+
+        self.workflow_orchestrator.build_workflow(workflow_structure)
+
+        workflow_response = await self.workflow_orchestrator.process_message(message, "")
+        return workflow_response

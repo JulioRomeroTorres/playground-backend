@@ -113,7 +113,7 @@ class BaseAgentFactory(ABC):
             temperature=llm_setting.temperature,
             top_p=llm_setting.top_p,
             tools=self.get_tools(),
-            chat_message_store_factory=lambda: chat_message_store_factory,
+            chat_message_store_factory= None if conversation_id is None else lambda: chat_message_store_factory,
             telemetry_properties=TelemetryProperties(
                 **{
                     "agent.id": agent_name,
@@ -128,7 +128,7 @@ class BaseAgentFactory(ABC):
 
     def create_agent(self, llm_setting: LlmSettings, session_id: str, thread_id: str, db_client: Any) -> ChatAgent:
     
-        chat_message_store_factory = MongoChatMessageStore( 
+        chat_message_store_factory = None if thread_id is None else MongoChatMessageStore( 
                                 db_repository=MongoDbRepository(
                                     database_name="agent_manager",
                                     collection_name="conversations",

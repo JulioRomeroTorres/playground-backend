@@ -1,15 +1,18 @@
 from abc import ABC, abstractmethod
 from typing import Any, AsyncGenerator, TYPE_CHECKING, Optional
+from app.domain.agent.agent import AgentSettings
 
 if TYPE_CHECKING:
     from app.domain.agent import AgentResponse
 
-class Orchestrator(ABC):
+class IWorkflowOrchestrator(ABC):
 
     @abstractmethod
-    def create_workflow(
-        self,
-    ) -> Any:
+    def create_agent(agent_settings: AgentSettings, conversation_id: Optional[str] = None) -> None:
+        pass
+
+    @abstractmethod
+    def build_workflow(self, workflow_structure: Any) -> None:
         pass
 
     @abstractmethod
