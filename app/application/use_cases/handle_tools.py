@@ -19,7 +19,7 @@ class HandleToolsUseCase:
             **tool_information.model_dump()
             }
         created_register = await self.tool_manager.create_tool(all_agent_information)
-        
+        print("created_register tool", created_register)
         if len(created_register) < 1:
             print("Error al encontrar el agente")
 

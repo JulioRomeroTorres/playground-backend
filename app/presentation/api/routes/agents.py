@@ -58,7 +58,7 @@ async def get_specific_agent_by_user_id(agent_id: str):
 
     return JSONResponse(specific_agent.format_json(), headers={"status_code": "200"})
 
-@router.post("/{agent_id}/conversations/{conversation_id}/messages")
+@router.post("/{agent_id}/conversations/{conversation_id}/messages/")
 async def chat_agent(agent_id: str, conversation_id: str, request: ConversationRequest):
     handle_message = get_handle_message_use_case()
 
@@ -80,7 +80,7 @@ async def chat_agent(agent_id: str, conversation_id: str, request: ConversationR
 
     return JSONResponse(chat_response.model_dump(), headers={"status_code": "200"})
 
-@router.post("/{agent_id}/conversations/{conversation_id}/messages/stream")
+@router.post("/{agent_id}/conversations/{conversation_id}/messages/stream/")
 async def chat_stream_agent(agent_id: str, conversation_id: str, request: ConversationRequest):
 
     handle_message_stream = get_handle_message_stream_use_case()
