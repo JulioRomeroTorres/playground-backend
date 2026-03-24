@@ -44,9 +44,10 @@ async def create_workflow(workflow_id: str, workflow_information_request: Workfl
 
 @router.get("/users/{user_id}/")
 async def get_workflows_by_user_id(user_id: str):
-    handle_get_agents = get_handle_workflows_use_case()
-    agents_by_user = await handle_get_agents.get_workflows_by_user(user_id)
-    return JSONResponse(agents_by_user, headers={"status_code": "200"})
+    handle_workflows = get_handle_workflows_use_case()
+    workflows_by_user = await handle_workflows.get_workflows_by_user(user_id)
+    formatted_workflows = [ workflow_by_user.format_json() for workflow_by_user in workflows_by_user ]
+    return JSONResponse(formatted_workflows, headers={"status_code": "200"})
 
 @router.get("/{workflow_id}/")
 async def get_specific_workflow_by_user_id(workflow_id: str):

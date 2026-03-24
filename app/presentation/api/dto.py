@@ -2,6 +2,7 @@
 from typing import Any, Optional, List, Dict, Any
 from pydantic import BaseModel, Field
 from app.domain.utils import get_current_datetime
+from app.domain.agent.workflow import AgenticEdge, AgenticNode
 
 from enum import Enum
 
@@ -63,16 +64,6 @@ class ToolInformationRequest(BaseModel):
 class WorkflowExecutionConfig(BaseModel):
     max_iterations: Optional[int] = 20
     checkpoint_enabled: Optional[bool] = False
-
-class AgenticEdge(BaseModel):
-    source: str
-    target: str
-
-class AgenticNode(BaseModel):
-    id: str
-    type: str
-    sub_type: Optional[str] = None
-    sub_agents: Optional[List[str]] = None
 
 class WorkflowInformationRequest(BaseModel):
     name: str

@@ -1,5 +1,5 @@
 {
-    "start_node": "router",
+    "start_node": "agent_1",
     "execution_config": {
       "max_iterations": 100,
       "checkpoint_enabled": true

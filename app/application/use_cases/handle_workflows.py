@@ -1,3 +1,4 @@
+from typing import List
 from app.domain.utils import (
     generate_uuid,
     get_datetime_now
@@ -37,10 +38,10 @@ class HandleWorkflowsUseCase:
         await self.workflow_information_manager.update_workflow(workflow_id, updated_information)
         return updated_information
 
-    async def get_workflows_by_user(self, user_id: str):
+    async def get_workflows_by_user(self, user_id: str) -> List[SimplifyWorkflowInformation]:
         selected_workflows = await self.workflow_information_manager.get_workflows_by_user(user_id)
         return [ SimplifyWorkflowInformation(**workflow)  for workflow in selected_workflows ]
     
-    async def get_specific_workflow_by_user(self, workflow_id: str):
+    async def get_specific_workflow_by_user(self, workflow_id: str) -> CompletedWorkflowInformation:
         selected_workflow = await self.workflow_information_manager.get_specific_workflow_information(workflow_id)
         return CompletedWorkflowInformation(**selected_workflow)
