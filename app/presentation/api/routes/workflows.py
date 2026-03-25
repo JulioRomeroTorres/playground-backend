@@ -8,7 +8,8 @@ from app.presentation.api.dependencies import (
     get_handle_workflows_message_use_case
 )
 from app.presentation.api.dto import (
-    ConversationRequest, ConversationResponse,
+    ConversationRequest, 
+    WorkflowResponse, AgentResponse,
     WorkflowInformationRequest
 )
 
@@ -56,22 +57,29 @@ async def get_specific_workflow_by_user_id(workflow_id: str):
 
     return JSONResponse(specific_agent.format_json(), headers={"status_code": "200"})
 
-@router.post("/{agent_id}/conversations/{conversation_id}/messages")
-async def chat_workflow(agent_id: str, conversation_id: str, request: ConversationRequest):
+@router.post("/{workflow_id}/conversations/{conversation_id}/messages/")
+async def chat_workflow(workflow_id: str, conversation_id: str, request: ConversationRequest):
     handle_message = get_handle_workflows_message_use_case()
 
     logger.info(f"Thread conversation {conversation_id}")
 
-    response = await handle_message.execute(
+    workflow_response = await handle_message.execute(
         message=request.message,
         additional_files=request.additional_files,
         conversation_id=conversation_id,
-        agent_id=agent_id
+        workflow_id=workflow_id
     )
 
-    chat_response = ConversationResponse(
-        content=response.message,
-        metadata={**response.metadata, "model_name": response},
+    contents = [
+        AgentResponse(
+            name=single_output.additional_properties.get('agent.id', ''),
+            content=single_output.text
+        ) for single_output in workflow_response.get_outputs()
+    ]
+
+    chat_response = WorkflowResponse(
+        contents=contents,
+        metadata={},
     )
 
     return JSONResponse(chat_response.model_dump(), headers={"status_code": "200"})

@@ -26,6 +26,8 @@ from agent_framework import (
 from app.infrastructure.executors.intent_classifier_executor import IntentClassifierExecutor
 from app.domain.orchestrator.service import IWorkflowOrchestrator
 
+from app.domain.agent.workflow import CompletedWorkflowInformation, AgenticNode
+
 logger = logging.getLogger(__name__)
 
 class WorkflowOrchestrator(IWorkflowOrchestrator):
@@ -39,13 +41,13 @@ class WorkflowOrchestrator(IWorkflowOrchestrator):
         self.db_client = db_client
 
     def create_agent(self, agent_settings: AgentSettings, conversation_id: Optional[str] = None) -> None:
-        agent = AgnosticAgent(conversation_id, agent_settings, self.db_client)
+        wrapper_agent = AgnosticAgent(conversation_id, agent_settings, self.db_client)
 
         self.agent_garden[agent_settings.id] = {
             "type": "agent",
             "name": agent_settings.name,
             "description": agent_settings.description,
-            "content": agent
+            "content": wrapper_agent
         }
 
     def generate_switch_case_edge_group(self, agents_ids: List[str], default_agent_id: str) -> List[Any]:
@@ -150,38 +152,51 @@ class WorkflowOrchestrator(IWorkflowOrchestrator):
                 "content": builder
             } 
 
-
-    def build_workflow(self, workflow_structure: Any) -> None:
+    def get_information_from_start_node(self, nodes: List[AgenticNode], start_node: str) -> AgenticNode:
+        selected_start_node = [ node for node in nodes  if node.id == start_node  ]
+        return selected_start_node[0]
+    
+    def build_workflow(self, workflow_structure: CompletedWorkflowInformation) -> None:
         workflow_builder = WorkflowBuilder()
+
+        print("AGENT GARDEN", self.agent_garden)
 
         for node in workflow_structure.nodes:
             if node.type == "agent":
-                workflow_builder.register_agent(
-                    factory_func=self.agent_garden[node.id].get("content").agent,
-                    name=self.agent_garden[node.id].get("name")
+                agentic_id = node.agentic_id
+                print("El nombre del agente ", self.agent_garden[node.agentic_id].get("name"))
+                
+                workflow_builder = workflow_builder.register_agent(
+                    factory_func=lambda aid=agentic_id :self.agent_garden[aid].get("content").agent,
+                    name=self.agent_garden[agentic_id].get("name"),
+                    output_response=True
                 )
             else:
-                workflow_builder.register_executor(
-                    factory_func=WorkflowExecutor(
-                        workflow=self.agent_garden[node.id].get("content"),
-                        id=self.agent_garden[node.id].get("name"),
+                print("El nombre del workflow ", self.agent_garden[node.agentic_id].get("name"))
+
+                workflow_builder = workflow_builder.register_executor(
+                    factory_func=lambda aid=agentic_id :WorkflowExecutor(
+                        workflow=self.agent_garden[aid].get("content"),
+                        id=self.agent_garden[aid].get("name"),
                         allow_direct_output=False,
                         propagate_request=True
                     ),
-                    name=self.agent_garden[node.id].get("name")
+                    name=self.agent_garden[node.agentic_id].get("name")
                 )
         
         for edge in workflow_structure.edges:
-            workflow_builder.add_edge(
-                self.agent_garden[edge.source].get("name"),
-                self.agent_garden[edge.target].get("name")
+
+            workflow_builder = workflow_builder.add_edge(
+                self.agent_garden[edge.source.agentic_id].get("name"),
+                self.agent_garden[edge.target.agentic_id].get("name")
             )
+        
+        start_agent = self.get_information_from_start_node( workflow_structure.nodes, workflow_structure.start_node)
+        start_agent_id = start_agent.agentic_id
 
         self.workflow = (
             workflow_builder.set_start_executor(
-                AgentExecutor(
-                    self.agent_garden[workflow_structure.start_node]["content"]
-                )
+                self.agent_garden[start_agent_id]["name"]
             )
             .build()
         )
@@ -209,6 +224,5 @@ class WorkflowOrchestrator(IWorkflowOrchestrator):
             yield event
     
     async def generate_content(self, message: str, additional_files: Optional[List[str]] = []) -> WorkflowRunResult:
-        content = self.prepare_content(message, additional_files)
-        workflow_response = await self.workflow.run(content)
+        workflow_response = await self.workflow.run(message)
         return workflow_response

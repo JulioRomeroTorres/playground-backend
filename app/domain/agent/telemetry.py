@@ -14,7 +14,7 @@ class AgentOperationEnum(Enum):
     CHAT = 'Chat'
 
 class TelemetryProperties(BaseModel):
-    agent_conversation_id: str = Field(alias = "agent.conversation.id", description="Agent Conversation Id")
+    agent_conversation_id: Optional[str] = Field(alias = "agent.conversation.id", description="Agent Conversation Id", default="")
     agent_id: str = Field(alias = "agent.id", description="Agent Id")
     agent_name: str = Field(alias="agent.name", description="Agent Name")
     agent_version: Optional[str] = Field(alias= "agent.version", description="Agent Version", default=get_settings().api_version)

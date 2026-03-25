@@ -22,12 +22,18 @@ class SimplifyWorkflowInformation(BaseModel):
 
     pass
 
+
+class AgenticEdgeInformation(BaseModel):
+    id: str
+    agentic_id: str
+
 class AgenticEdge(BaseModel):
-    source: str
-    target: str
+    source: AgenticEdgeInformation
+    target: AgenticEdgeInformation
 
 class AgenticNode(BaseModel):
     id: str
+    agentic_id: str
     type: str
     sub_type: Optional[str] = None
     sub_agents: Optional[List[str]] = None
@@ -35,7 +41,7 @@ class AgenticNode(BaseModel):
 class CompletedWorkflowInformation(BaseModel):
 
     name: str
-    start_node: str
+    start_node: Optional[str] = None
     execution_config: Any
     unique_agents_ids: Optional[List[str]]
     nodes: Optional[List[AgenticNode]] = []

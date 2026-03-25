@@ -1,6 +1,10 @@
 from abc import ABC, abstractmethod
-from typing import Any, AsyncGenerator, TYPE_CHECKING, Optional
+from typing import Any, AsyncIterable, TYPE_CHECKING, Optional, List
 from app.domain.agent.agent import AgentSettings
+from agent_framework import (
+    WorkflowEvent,
+    WorkflowRunResult
+)
 
 if TYPE_CHECKING:
     from app.domain.agent import AgentResponse
@@ -16,25 +20,9 @@ class IWorkflowOrchestrator(ABC):
         pass
 
     @abstractmethod
-    async def process_message(
-        self,
-        message: str,
-        session_id: str,
-        context: Any | None = None,
-        messages: list[Any] | None = None,
-        session_state: dict[str, Any] | None = None,
-        decision: Optional[str] = None
-    ) -> "AgentResponse":
+    async def generate_stream_content(self, message: str, additional_files: Optional[List[str]] = []) -> AsyncIterable[WorkflowEvent]:
         pass
-
+    
     @abstractmethod
-    async def process_message_stream(
-        self,
-        message: str,
-        session_id: str,
-        context: Any | None = None,
-        messages: list[Any] | None = None,
-        session_state: dict[str, Any] | None = None,
-        decision: Optional[str] = None
-    ) -> AsyncGenerator[dict[str, Any], None]:
+    async def generate_content(self, message: str, additional_files: Optional[List[str]] = []) -> WorkflowRunResult:
         pass

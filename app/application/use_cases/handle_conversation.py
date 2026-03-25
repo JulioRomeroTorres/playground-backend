@@ -18,9 +18,14 @@ from app.domain.conversation.conversation import (
     TypeStreamingResponseEnum  
 ) 
 
+from app.domain.agent.workflow import CompletedWorkflowInformation
+
 from app.domain.orchestrator.service import IWorkflowOrchestrator
 
 from app.domain.utils import generate_uuid, get_current_datetime
+from agent_framework import (
+    WorkflowRunResult, AgentRunResponse
+)
 
 class MessageUseCase:
     def __init__(
@@ -141,8 +146,9 @@ class HandleWorkflowMessageUseCase:
         workflow_id: str,
         additional_files: Optional[List[str]] = [],
         decision: Optional[str] = None
-    ):
+    ) -> WorkflowRunResult:
         workflow_structure = await self.workflow_information_manager.get_specific_workflow_information(workflow_id)
+        workflow_structure = CompletedWorkflowInformation(**workflow_structure)
 
         agents_coroutine_information = [
             self.workflow_information_manager.get_specific_agent_by_user(agent_id)
@@ -154,7 +160,14 @@ class HandleWorkflowMessageUseCase:
         [
             self.workflow_orchestrator.create_agent(
                 AgentSettings(
-                **agent_information
+                    **{
+                        "id": agent_information["agent_id"],
+                        "name":agent_information["name"],
+                        "version":agent_information["version"],
+                        "system_instruction": agent_information["system_instruction"],
+                        "model":agent_information["model"],
+                        "tools":agent_information["tools"]
+                    }
                 )
             )
             for agent_information in  agents_information
@@ -162,5 +175,6 @@ class HandleWorkflowMessageUseCase:
 
         self.workflow_orchestrator.build_workflow(workflow_structure)
 
-        workflow_response = await self.workflow_orchestrator.process_message(message, "")
+        workflow_response = await self.workflow_orchestrator.generate_content(message)
+
         return workflow_response

@@ -97,6 +97,16 @@ class ConversationResponse(BaseModel):
     timestamp: str = Field(description="Response timestamp", default=get_current_datetime())
     metadata: dict[str, Any] = Field(default_factory=dict, description="Additional metadata")
 
+class AgentResponse(BaseModel):
+    type: str = Field(description="Response type", default="text")
+    content: str = Field(description="Response message")
+    name: str = Field(description="Agent Name")
+
+class WorkflowResponse(BaseModel):
+    contents: List[AgentResponse] = Field(description="Response message", default=[])
+    timestamp: str = Field(description="Response timestamp", default=get_current_datetime())
+    metadata: dict[str, Any] = Field(default_factory=dict, description="Additional metadata")
+
 class CommonFilterParams(BaseModel):
     page: Optional[int] = 0
     limit: Optional[int] = 10

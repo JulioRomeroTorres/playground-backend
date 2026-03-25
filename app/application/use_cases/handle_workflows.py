@@ -29,9 +29,10 @@ class HandleWorkflowsUseCase:
 
     async def update_workflow(self, workflow_id, workflow_information_request):
         current_workflow_information = await self.workflow_information_manager.get_specific_workflow_information(workflow_id)
+        print("current_workflow_information", current_workflow_information) 
         updated_information = {
             **current_workflow_information,
-            **workflow_information_request.workflow_information_request,
+            **workflow_information_request.model_dump(),
             "updated_at": get_datetime_now()
         }
 
