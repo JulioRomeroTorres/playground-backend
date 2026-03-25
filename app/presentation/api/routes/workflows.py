@@ -72,8 +72,8 @@ async def chat_workflow(workflow_id: str, conversation_id: str, request: Convers
 
     contents = [
         AgentResponse(
-            name=single_output.additional_properties.get('agent.id', ''),
-            content=single_output.text
+            author=single_output.additional_properties.get('agent.id', ''),
+            value=single_output.text
         ) for single_output in workflow_response.get_outputs()
     ]
 

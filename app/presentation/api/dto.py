@@ -99,8 +99,8 @@ class ConversationResponse(BaseModel):
 
 class AgentResponse(BaseModel):
     type: str = Field(description="Response type", default="text")
-    content: str = Field(description="Response message")
-    name: str = Field(description="Agent Name")
+    value: str = Field(description="Response message")
+    author: str = Field(description="Agent Name")
 
 class WorkflowResponse(BaseModel):
     contents: List[AgentResponse] = Field(description="Response message", default=[])
