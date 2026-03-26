@@ -14,6 +14,7 @@ from app.presentation.api.dto import (
 )
 
 logger = logging.getLogger(__name__)
+from agent_framework import AgentRunResponse, WorkflowRunResult
 
 BASE_PATH = "/api/v1/workflows"
 
@@ -69,6 +70,10 @@ async def chat_workflow(workflow_id: str, conversation_id: str, request: Convers
         conversation_id=conversation_id,
         workflow_id=workflow_id
     )
+
+    print("VASSS A CAER CPP", workflow_response.get_outputs())
+    for wk_output in workflow_response.get_outputs():
+        print(wk_output.to_dict())
 
     contents = [
         AgentResponse(

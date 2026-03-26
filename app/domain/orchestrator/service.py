@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from typing import Any, AsyncIterable, TYPE_CHECKING, Optional, List
-from app.domain.agent.agent import AgentSettings
+from app.domain.agent.agent import AgentSettings, WorkflowSettings
 from agent_framework import (
     WorkflowEvent,
     WorkflowRunResult
@@ -13,6 +13,10 @@ class IWorkflowOrchestrator(ABC):
 
     @abstractmethod
     def create_agent(agent_settings: AgentSettings, conversation_id: Optional[str] = None) -> None:
+        pass
+
+    @abstractmethod
+    def create_sub_workflow(self, sub_workflow_settings: WorkflowSettings) -> None:
         pass
 
     @abstractmethod

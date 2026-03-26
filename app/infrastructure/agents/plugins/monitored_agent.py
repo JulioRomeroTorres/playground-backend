@@ -13,7 +13,7 @@ class MonitoredChatAgent(ChatAgent):
 
     def update_telemetry_properties(self, args: List[Any], agent_response: AgentRunResponse) -> AgentRunResponse:
         
-        self.telemetry_properties.input_messages = self._normalize_messages(args[0])
+        self.telemetry_properties.input_messages = [] if len(args) < 1 else self._normalize_messages(args[0])
         self.telemetry_properties.input_tokens = agent_response.usage_details.input_token_count
         self.telemetry_properties.output_messages = agent_response.messages
         self.telemetry_properties.output_tokens = agent_response.usage_details.output_token_count
@@ -25,6 +25,7 @@ class MonitoredChatAgent(ChatAgent):
 
         #self._log_input(args, kwargs)
         agent_response = await super().run(*args, **kwargs)
+        print("AJJAAAAA", agent_response)
         total_time = time.time() - start_time
 
         self.update_telemetry_properties(args, agent_response)

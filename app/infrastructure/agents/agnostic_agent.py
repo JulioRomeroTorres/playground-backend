@@ -47,7 +47,7 @@ class AgnosticAgent(BaseAgentFactory):
     def __init__(self, conversation_id: str, agent_metadata: AgentSettings, db_client: Any = None):
         
         settings = get_settings()
-        print("Agent Metadata", agent_metadata)
+
         self.agent_name = agent_metadata.name
         self.agent_version = agent_metadata.version
 

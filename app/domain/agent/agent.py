@@ -88,7 +88,7 @@ class AgentSettings(BaseModel):
 
 class WorkflowSettings(BaseModel):
     id: Optional[str] = ""
-    type: str
+    type: Optional[str] = "workflow"
     sub_type: str
     sub_agents: List[str]
       

@@ -10,6 +10,7 @@ from app.domain.agent.agent import ConversationResponse
 from app.domain.agent_core.service import IAgentCore
 from app.application.services.thread_manager import ThreadManager
 from app.domain.agent.agent import AgentSettings
+from app.domain.agent.agent import WorkflowSettings
 
 from app.application.services.agent_information_manager import AgentInformationManager
 
@@ -170,7 +171,17 @@ class HandleWorkflowMessageUseCase:
                     }
                 )
             )
-            for agent_information in  agents_information
+            for index, agent_information in enumerate(agents_information)
+        ]
+
+        [
+            self.workflow_orchestrator.create_sub_workflow(
+                WorkflowSettings(
+                    id=workflow_node.agentic_id,
+                    sub_type=workflow_node.sub_type,
+                    sub_agents=workflow_node.sub_agents
+            ))  
+            for workflow_node in workflow_structure.nodes if workflow_node.type == 'workflow' 
         ]
 
         self.workflow_orchestrator.build_workflow(workflow_structure)

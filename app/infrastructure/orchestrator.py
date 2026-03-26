@@ -27,6 +27,7 @@ from app.infrastructure.executors.intent_classifier_executor import IntentClassi
 from app.domain.orchestrator.service import IWorkflowOrchestrator
 
 from app.domain.agent.workflow import CompletedWorkflowInformation, AgenticNode
+from app.domain.utils import generate_uuid
 
 logger = logging.getLogger(__name__)
 
@@ -39,6 +40,7 @@ class WorkflowOrchestrator(IWorkflowOrchestrator):
         self.agent_garden: Dict[str, Any] = {}
         self.workflow:Workflow = None
         self.db_client = db_client
+        self.mapper_name = {}
 
     def create_agent(self, agent_settings: AgentSettings, conversation_id: Optional[str] = None) -> None:
         wrapper_agent = AgnosticAgent(conversation_id, agent_settings, self.db_client)
@@ -50,12 +52,13 @@ class WorkflowOrchestrator(IWorkflowOrchestrator):
             "content": wrapper_agent
         }
 
-    def generate_switch_case_edge_group(self, agents_ids: List[str], default_agent_id: str) -> List[Any]:
+    def generate_switch_case_edge_group(self, agents_ids: List[str], default_agent_id: str, workflow_alias: str) -> List[Any]:
         
         switch_conditions = []
+        
         default_target_executor = AgentExecutor(
             agent=self.agent_garden[default_agent_id].get("content").agent,
-            id=self.agent_garden[default_agent_id].get("name")
+            id=f"{workflow_alias}_{self.agent_garden[default_agent_id].get("name")}_{len(agents_ids)+1}"
         )
 
         for index, agent_id in enumerate(agents_ids):
@@ -64,7 +67,7 @@ class WorkflowOrchestrator(IWorkflowOrchestrator):
 
             agent_executor = AgentExecutor(
                 agent=current_agent,
-                id=name
+                id=f"{workflow_alias}_{name}_{index}"
             )
 
             switch_conditions.append(
@@ -95,9 +98,10 @@ class WorkflowOrchestrator(IWorkflowOrchestrator):
                 }
                 Como respuesta indicaras la etiqueta asi como también el porqué elegiste ello
             """,
-            tools=[],            
+            tools=[],       
+            version='v1',     
             model='gpt-4o-mini',
-            id=f"classifier-agent-{workflow_id}"
+            id=f"{workflow_id}_classifier-agent"
         )
         agent_wrapper = AgnosticAgent(None, agent_settings, self.db_client)
         return agent_wrapper.agent
@@ -107,41 +111,62 @@ class WorkflowOrchestrator(IWorkflowOrchestrator):
         agent_garden_type = "workflow"
 
         if sub_workflow_settings.sub_type == 'sequential':
-            for agent_id in sub_workflow_settings.sub_agents:
-                current_agent = self.agent_garden[agent_id].get("content")
-                workflow_builder.register_agent(
-                    factory_func=current_agent.agent,
-                    name=current_agent.get_agent_name()
-                )
+            sub_edges = []
 
-            initial_agent = self.agent_garden[sub_workflow_settings.sub_agents[0]].get("content")
-            workflow_builder.set_start_executor(initial_agent.get_agent_name())
+            for index, agent_id in enumerate(sub_workflow_settings.sub_agents):
+                
+                sub_edges.append(f"{self.agent_garden[agent_id].get("name")}_{sub_workflow_settings.id}_{index}")
+                workflow_builder = workflow_builder.register_executor(
+                    factory_func=lambda aid=agent_id, idx=index:AgentExecutor(
+                        self.agent_garden[aid].get("content").agent,
+                        output_response=True,
+                        id=f"{self.agent_garden[aid].get("name")}_{sub_workflow_settings.id}_{idx}"
+                    ),
+                    name=f"{self.agent_garden[agent_id].get("name")}_{sub_workflow_settings.id}_{index}"
+                )
+                
+            for edge_idx in range(len(sub_workflow_settings.sub_agents) - 1):
+                workflow_builder = workflow_builder.add_edge(
+                    sub_edges[edge_idx],
+                    sub_edges[edge_idx+1]
+                )
+                
+            workflow_builder = workflow_builder.set_start_executor(f"{self.agent_garden[sub_workflow_settings.sub_agents[0]].get("name")}_{sub_workflow_settings.id}_{0}")
             
             self.agent_garden[sub_workflow_settings.id] = {
                 "type": agent_garden_type,
                 "name": sub_workflow_settings.id,
-                "content": workflow_builder.build()
+                "content": workflow_builder.build().as_agent(sub_workflow_settings.id)
             } 
         
         if sub_workflow_settings.sub_type == 'parallel':
-            participants = [ self.agent_garden[agent_id].get("content").agent for agent_id in sub_workflow_settings.sub_agents ]
+            participants = [ 
+                AgentExecutor(
+                    self.agent_garden[agent_id].get("content").agent,
+                    output_response=True,
+                    id=f"{sub_workflow_settings.id}_{self.agent_garden[agent_id].get("name")}_{index}"
+                )
+                for index, agent_id in enumerate(sub_workflow_settings.sub_agents) 
+            ]
             self.agent_garden[sub_workflow_settings.id] = {
                 "type": agent_garden_type,
                 "name": sub_workflow_settings.id,
-                "content": ConcurrentBuilder().participants(participants).build()
+                "content": ConcurrentBuilder().participants(participants).build().as_agent(sub_workflow_settings.id)
             } 
 
         if sub_workflow_settings.sub_type == 'switch':
+            classifier_agent = self.generate_classifier_agent(sub_workflow_settings.id, sub_workflow_settings.sub_agents)
             classifier_executor = IntentClassifierExecutor(
-                
+                classifier_agent,
                 sub_workflow_settings.id
             )
+
             builder = (
                 WorkflowBuilder()
                 .set_start_executor(classifier_executor)
                 .add_switch_case_edge_group(
                     classifier_executor,
-                    self.generate_switch_case_edge_group(sub_workflow_settings.sub_agents[0:-1], sub_workflow_settings.sub_agents[-1])
+                    self.generate_switch_case_edge_group(sub_workflow_settings.sub_agents[0:-1], sub_workflow_settings.sub_agents[-1], sub_workflow_settings.id)
                 )
                 .build()
             )
@@ -149,54 +174,51 @@ class WorkflowOrchestrator(IWorkflowOrchestrator):
             self.agent_garden[sub_workflow_settings.id] = {
                 "type": agent_garden_type,
                 "name": sub_workflow_settings.id,
-                "content": builder
+                "content": builder.as_agent(sub_workflow_settings.id)
             } 
 
     def get_information_from_start_node(self, nodes: List[AgenticNode], start_node: str) -> AgenticNode:
         selected_start_node = [ node for node in nodes  if node.id == start_node  ]
         return selected_start_node[0]
     
+    def generate_unique_id(self, name: str, type: str, suffix: str ) -> str:
+        return f"{name}_{type}_{suffix}"
+
     def build_workflow(self, workflow_structure: CompletedWorkflowInformation) -> None:
         workflow_builder = WorkflowBuilder()
 
-        print("AGENT GARDEN", self.agent_garden)
-
         for node in workflow_structure.nodes:
+            agentic_id = node.agentic_id
             if node.type == "agent":
-                agentic_id = node.agentic_id
-                print("El nombre del agente ", self.agent_garden[node.agentic_id].get("name"))
                 
-                workflow_builder = workflow_builder.register_agent(
-                    factory_func=lambda aid=agentic_id :self.agent_garden[aid].get("content").agent,
-                    name=self.agent_garden[agentic_id].get("name"),
-                    output_response=True
+                workflow_builder = workflow_builder.register_executor(
+                    factory_func=lambda aid=agentic_id : AgentExecutor(
+                        self.agent_garden[aid].get("content").agent,
+                        output_response=True,
+                        id=f"{self.agent_garden[aid].get("name")}_agent_{node.id}"
+                    ),
+                    name=node.id
                 )
             else:
-                print("El nombre del workflow ", self.agent_garden[node.agentic_id].get("name"))
-
                 workflow_builder = workflow_builder.register_executor(
-                    factory_func=lambda aid=agentic_id :WorkflowExecutor(
-                        workflow=self.agent_garden[aid].get("content"),
-                        id=self.agent_garden[aid].get("name"),
-                        allow_direct_output=False,
-                        propagate_request=True
+                    factory_func=lambda aid=agentic_id :AgentExecutor(
+                        self.agent_garden[aid].get("content"),
+                        output_response=True,
+                        id=f"{self.agent_garden[aid].get("name")}_sub_workflow_{node.id}"
                     ),
-                    name=self.agent_garden[node.agentic_id].get("name")
+                    name=node.id
                 )
         
         for edge in workflow_structure.edges:
 
             workflow_builder = workflow_builder.add_edge(
-                self.agent_garden[edge.source.agentic_id].get("name"),
-                self.agent_garden[edge.target.agentic_id].get("name")
+                edge.source.id,
+                edge.target.id
             )
         
-        start_agent = self.get_information_from_start_node( workflow_structure.nodes, workflow_structure.start_node)
-        start_agent_id = start_agent.agentic_id
-
         self.workflow = (
             workflow_builder.set_start_executor(
-                self.agent_garden[start_agent_id]["name"]
+                workflow_structure.start_node
             )
             .build()
         )
