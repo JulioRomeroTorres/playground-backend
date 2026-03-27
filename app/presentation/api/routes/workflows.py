@@ -71,7 +71,7 @@ async def chat_workflow(workflow_id: str, conversation_id: str, request: Convers
         workflow_id=workflow_id
     )
 
-    print("VASSS A CAER CPP", workflow_response.get_outputs())
+    print("VASSS A CAER CPP", workflow_response.get_outputs(), "<=====>",len(workflow_response.get_outputs()))
     for wk_output in workflow_response.get_outputs():
         print(wk_output.to_dict())
 

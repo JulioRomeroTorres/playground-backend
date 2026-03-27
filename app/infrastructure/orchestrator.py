@@ -19,7 +19,7 @@ from app.infrastructure.agents.agnostic_agent import AgnosticAgent
 from agent_framework import (
     WorkflowBuilder, 
     Case, Default, WorkflowExecutor, AgentExecutor,
-    ConcurrentBuilder,
+    ConcurrentBuilder, SequentialBuilder,
     Workflow, WorkflowRunResult, WorkflowEvent
 )
 
@@ -27,7 +27,7 @@ from app.infrastructure.executors.intent_classifier_executor import IntentClassi
 from app.domain.orchestrator.service import IWorkflowOrchestrator
 
 from app.domain.agent.workflow import CompletedWorkflowInformation, AgenticNode
-from app.domain.utils import generate_uuid
+from app.infrastructure.executors.classified_agent_executor import ClassifiedAgentExecutor
 
 logger = logging.getLogger(__name__)
 
@@ -56,8 +56,9 @@ class WorkflowOrchestrator(IWorkflowOrchestrator):
         
         switch_conditions = []
         
-        default_target_executor = AgentExecutor(
+        default_target_executor = ClassifiedAgentExecutor(
             agent=self.agent_garden[default_agent_id].get("content").agent,
+            output_response=True,
             id=f"{workflow_alias}_{self.agent_garden[default_agent_id].get("name")}_{len(agents_ids)+1}"
         )
 
@@ -65,8 +66,9 @@ class WorkflowOrchestrator(IWorkflowOrchestrator):
             current_agent = self.agent_garden[agent_id].get("content").agent
             name = self.agent_garden[agent_id].get("name")
 
-            agent_executor = AgentExecutor(
+            agent_executor = ClassifiedAgentExecutor(
                 agent=current_agent,
+                output_response=True,
                 id=f"{workflow_alias}_{name}_{index}"
             )
 
@@ -96,7 +98,7 @@ class WorkflowOrchestrator(IWorkflowOrchestrator):
                 {
                     '\n'.join(rules)
                 }
-                Como respuesta indicaras la etiqueta asi como también el porqué elegiste ello
+                Como respuesta indicaras la etiqueta, la razon por lo etiquetaste así y el mensaje original que realizó el usuario
             """,
             tools=[],       
             version='v1',     
@@ -109,6 +111,21 @@ class WorkflowOrchestrator(IWorkflowOrchestrator):
     def create_sub_workflow(self, sub_workflow_settings: WorkflowSettings): 
         workflow_builder = WorkflowBuilder()
         agent_garden_type = "workflow"
+
+        if sub_workflow_settings.sub_type == 'sequential_v2':
+            participants = [ 
+                AgentExecutor(
+                    self.agent_garden[agent_id].get("content").agent,
+                    output_response=True,
+                    id=f"{sub_workflow_settings.id}_{self.agent_garden[agent_id].get("name")}_{index}"
+                )
+                for index, agent_id in enumerate(sub_workflow_settings.sub_agents) 
+            ]
+            self.agent_garden[sub_workflow_settings.id] = {
+                "type": agent_garden_type,
+                "name": sub_workflow_settings.id,
+                "content": SequentialBuilder().participants(participants).build().as_agent(sub_workflow_settings.id)
+            }
 
         if sub_workflow_settings.sub_type == 'sequential':
             sub_edges = []

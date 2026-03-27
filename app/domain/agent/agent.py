@@ -100,3 +100,7 @@ class IntentClassification(BaseModel):
         default="",
         description="Razonamiento de la clasificación"
     )
+    original_message: str = Field(
+        default="",
+        description="Peticion original del usuario"
+    )

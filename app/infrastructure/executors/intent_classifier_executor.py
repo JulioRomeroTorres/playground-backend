@@ -1,6 +1,6 @@
 from agent_framework import (
     Executor, ChatAgent, WorkflowContext,
-    ChatMessage, AgentExecutorResponse, SubWorkflowRequestMessage,
+    ChatMessage, AgentExecutorResponse, SubWorkflowRequestMessage, AgentRunResponse,
     handler
 ) 
 from typing import List
@@ -18,8 +18,8 @@ class IntentClassifierExecutor(Executor):
         classification_result = await self.classifier_agent.run(
             messages=input_data,
             response_format=IntentClassification
-        )        
-        await ctx.send_message(classification_result)        
+        )
+        await ctx.send_message(classification_result.value)        
 
     @handler
     async def handle(self, 

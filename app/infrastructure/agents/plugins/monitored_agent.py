@@ -25,7 +25,6 @@ class MonitoredChatAgent(ChatAgent):
 
         #self._log_input(args, kwargs)
         agent_response = await super().run(*args, **kwargs)
-        print("AJJAAAAA", agent_response)
         total_time = time.time() - start_time
 
         self.update_telemetry_properties(args, agent_response)
